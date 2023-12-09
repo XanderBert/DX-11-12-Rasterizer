@@ -2,7 +2,7 @@
 
 struct SDL_Window;
 struct SDL_Surface;
-
+class Mesh;
 namespace dae
 {
 	class Renderer final
@@ -25,13 +25,18 @@ namespace dae
 		int m_Width{};
 		int m_Height{};
 
-		bool m_IsInitialized{ false };
+		//MESH
+		void InitializeMesh();
+		std::unique_ptr<Mesh> m_pMesh;
 
+
+		
 		//DIRECTX
+		bool m_IsInitialized{ false };
 		HRESULT InitializeDirectX();
 		ID3D11Device* m_pDevice;
 		ID3D11DeviceContext* m_pDeviceContext;
-		IDXGISwapChain* m_pSwapChain;
+		IDXGISwapChain1* m_pSwapChain;
 		ID3D11Texture2D* m_pDepthStencilBuffer;
 		ID3D11DepthStencilView* m_pDepthStencilView;
 		ID3D11Resource* m_pRenderTargetBuffer;

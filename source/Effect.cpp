@@ -14,8 +14,7 @@ Effect::Effect(ID3D11Device* pDevice, const std::wstring& assetFile,const LPCSTR
 
 Effect::~Effect()
 {
-    if(m_pEffect)
-    m_pEffect->Release();
+    if(m_pEffect)       m_pEffect->Release();
 }
 
 ID3DX11Effect* Effect::LoadEffect(ID3D11Device* pDevice, const std::wstring& assetFile)

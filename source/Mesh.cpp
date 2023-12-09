@@ -57,12 +57,14 @@ Mesh::Mesh(ID3D11Device* pDevice, const std::vector<Vertex>& vertices,const  std
     subresourceData.pSysMem = indices.data();
     hr = pDevice->CreateBuffer(&bufferDescription, &subresourceData, &m_pIndexBuffer);
     assert(SUCCEEDED(hr) && "Mesh::Mesh() -> Failed to create index buffer!");
-
-    
 }
 
 Mesh::~Mesh()
 {
+    if (m_pVertexBuffer) m_pVertexBuffer->Release();
+    if (m_pInputLayout) m_pInputLayout->Release();
+    if (m_pIndexBuffer) m_pIndexBuffer->Release();
+    delete m_pEffect;
 }
 
 void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const

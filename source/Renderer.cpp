@@ -23,6 +23,8 @@ namespace dae {
 		{
 			std::cout << "DirectX initialization failed!\n";
 		}
+
+		InitializeMesh();
 	}
 
 	Renderer::~Renderer()
@@ -44,7 +46,7 @@ namespace dae {
 
 	void Renderer::Update(const Timer* pTimer)
 	{
-
+		
 	}
 
 
@@ -58,8 +60,20 @@ namespace dae {
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, &clearColor.r);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
 
+		assert(m_pMesh != nullptr && "Mesh is not initialized!");
+		m_pMesh->Render(m_pDeviceContext);
 
 
+
+		//Swap
+		m_pSwapChain->Present(1, 0);
+
+		// Rebind the RTV and DSV
+		m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
+	}
+
+	void Renderer::InitializeMesh()
+	{
 		const std::vector<Vertex> vertices
 		{
 			Vertex{ 0.f, 0.5f, 0.f, 1.f, 0.f, 0.f },
@@ -71,11 +85,7 @@ namespace dae {
 			0, 1, 2
 		};
 
-		const Mesh triangle{ m_pDevice, vertices, indices };
-		triangle.Render(m_pDeviceContext);
-		//Swap
-		m_pSwapChain->Present(0, 0);
-
+		m_pMesh = std::make_unique<Mesh>(m_pDevice, vertices, indices);
 	}
 
 	HRESULT Renderer::InitializeDirectX()
@@ -105,42 +115,54 @@ namespace dae {
 
 
 		//
-		//Create DXGI Factory1
+		//Create DXGI Factory2
 		//
 		IDXGIFactory1* pFactory{};
-		//result = CreateDXGIFactory1(IID_PPV_ARGS(&pFactory));
-		result = CreateDXGIFactory1(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(&pFactory));
+		result = CreateDXGIFactory1(IID_PPV_ARGS(&pFactory));
+		if(FAILED(result)) return result;
+
+		IDXGIFactory2* pFactory2{};
+		result = pFactory->QueryInterface(IID_PPV_ARGS(&pFactory2));
 		if(FAILED(result)) return result;
 
 
 		//
 		//Create SwapChain
 		//
-		DXGI_SWAP_CHAIN_DESC swapChainDesc{};
-		swapChainDesc.BufferDesc.Width = m_Width;
-		swapChainDesc.BufferDesc.Height = m_Height;
-		swapChainDesc.BufferDesc.RefreshRate.Numerator = 1; 
-		swapChainDesc.BufferDesc.RefreshRate.Denominator = 60;								// 60Hz
-		swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;						// 32 bits, 8 bits per channel
-		swapChainDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;	// Scanline order is not important
-		swapChainDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;					// No scaling
-		swapChainDesc.SampleDesc.Count = 1;													// No anti-aliasing
-		swapChainDesc.SampleDesc.Quality = 0;												// No anti-aliasing
-		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;						// Use the buffer as a render target
-		swapChainDesc.BufferCount = 1;														// Use a single buffer
-		swapChainDesc.Windowed = true;														//Windowed
-		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;								// Discard the previous buffer when swapping
-		swapChainDesc.Flags = 0;															// No flags
+		DXGI_SWAP_CHAIN_DESC1 swapChain1Desc{};
+		swapChain1Desc.Width = m_Width;
+		swapChain1Desc.Height = m_Height;
+		swapChain1Desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;									// 32 bits, 8 bits per channel
+		swapChain1Desc.SampleDesc.Count = 1;													// No anti-aliasing
+		swapChain1Desc.SampleDesc.Quality = 0;												// No anti-aliasing
+		swapChain1Desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;						// Use the buffer as a render target
+		swapChain1Desc.BufferCount = 2;														// 2 buffers
+		swapChain1Desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;						// Flip the buffers when presenting
+		swapChain1Desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;								
+		swapChain1Desc.Scaling = DXGI_SCALING_NONE;											// No scaling
+		swapChain1Desc.Flags = 0;															// No flags
+
 		
-		//Get the handle for the backbuffer
+		// Get the handle for the backbuffer using SDL
 		SDL_SysWMinfo wmInfo;
 		SDL_GetVersion(&wmInfo.version);
 		SDL_GetWindowWMInfo(m_pWindow, &wmInfo);
-		swapChainDesc.OutputWindow = wmInfo.info.win.window;								//set the output window to the SDL_Backbuffer
-
-		//Create the actual swapchain
-		result = pFactory->CreateSwapChain(m_pDevice, &swapChainDesc, &m_pSwapChain);
+		const HWND WHNDL = wmInfo.info.win.window;
+		
+		// Create IDXGISwapChain1
+		result = pFactory2->CreateSwapChainForHwnd(
+			m_pDevice,							// D3D device
+			WHNDL,								// Window handle
+			&swapChain1Desc,
+			nullptr,							// Fullscreen descriptor
+			nullptr,							// Restrict the output to a particular output
+			&m_pSwapChain
+		);
 		if(FAILED(result)) return result;
+
+		pFactory->Release();
+		pFactory2->Release();
+		
 
 		//
 		//Create the DepthStencil and the DepthStencilView
@@ -175,8 +197,7 @@ namespace dae {
 		//
 		//Create RnedertargetView and RenderTarget
 		//
-		//result = m_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&m_pRenderTargetBuffer));
-		result = m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&m_pRenderTargetBuffer));
+		result = m_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&m_pRenderTargetBuffer));
 		if(FAILED(result)) return result;
 
 		result = m_pDevice->CreateRenderTargetView(m_pRenderTargetBuffer, nullptr, &m_pRenderTargetView);
@@ -200,6 +221,9 @@ namespace dae {
 		viewport.MinDepth = 0;
 		viewport.MaxDepth = 1;
 		m_pDeviceContext->RSSetViewports(1, &viewport);
+
+
+	
 		
 		return S_OK;
 	}
