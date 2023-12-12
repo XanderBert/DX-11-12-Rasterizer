@@ -1,3 +1,8 @@
+//global variables
+//
+float4x4 gWorldViewProj : WorldViewProjection;
+
+
 struct VS_INPUT
 {
 	float3 Position : POSITION;
@@ -14,7 +19,10 @@ struct VS_OUTPUT
 VS_OUTPUT VS(VS_INPUT input)
 {
 	VS_OUTPUT output = (VS_OUTPUT)0;
-	output.Position = float4(input.Position, 1.0f);
+
+	//multiply the World View Projection Matrix with every vertex position
+	output.Position = float4(mul(float4(input.Position, 1.0f), gWorldViewProj));
+
 	output.Color = input.Color;
 	return output;
 }
@@ -35,5 +43,6 @@ technique11 DefaultTechnique
 		SetVertexShader(CompileShader(vs_5_0, VS()));
 		SetGeometryShader(NULL);
 		SetPixelShader(CompileShader(ps_5_0, PS()));
+		
 	}
 }

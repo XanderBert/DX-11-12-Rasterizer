@@ -20,7 +20,7 @@ public:
 
 
     void Render(ID3D11DeviceContext* pDeviceContext) const;
-    //void Update(float elapsedSec);
+    void Update(const dae::Timer* pTimer, const dae::Matrix* worldViewProjectionMatrix);
 
 private:
     ID3D11Buffer* m_pVertexBuffer{ nullptr };

@@ -10,11 +10,22 @@ Effect::Effect(ID3D11Device* pDevice, const std::wstring& assetFile,const LPCSTR
 
     m_pTechnique = m_pEffect->GetTechniqueByName(techniqueName);
     assert(m_pTechnique->IsValid() && "Effect::Effect() -> Technique not valid!");
+
+    //Get the WorldViewProjection variable from the shader and store it in a private variable
+    m_pWorldViewProjectionVar = m_pEffect->GetVariableByName("gWorldViewProj")->AsMatrix();
+    assert(m_pWorldViewProjectionVar->IsValid() && "Effect::Effect() -> WorldViewProjection variable not valid!");
+    
 }
 
 Effect::~Effect()
 {
-    if(m_pEffect)       m_pEffect->Release();
+    if(m_pEffect)    m_pEffect->Release();
+}
+
+void Effect::SetWorldViewProjectionMatrix(const dae::Matrix* worldViewProjectionMatrix) const
+{
+    //reinterpret to pointer to float
+    m_pWorldViewProjectionVar->SetMatrix(reinterpret_cast<const float*>(worldViewProjectionMatrix));
 }
 
 ID3DX11Effect* Effect::LoadEffect(ID3D11Device* pDevice, const std::wstring& assetFile)
@@ -29,8 +40,6 @@ ID3DX11Effect* Effect::LoadEffect(ID3D11Device* pDevice, const std::wstring& ass
     shaderFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
     
-    //Effects11: D3DCompileFromFile of fx_5_0 profile failed 80004005: Resources/PosCol3D.fx
-    //PosCol3D.fx(1,1): error X3000: Illegal character in shader file
     result = D3DX11CompileEffectFromFile(assetFile.c_str(),
         nullptr,
         nullptr,

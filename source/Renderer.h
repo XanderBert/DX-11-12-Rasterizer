@@ -3,6 +3,8 @@
 struct SDL_Window;
 struct SDL_Surface;
 class Mesh;
+class Camera;
+
 namespace dae
 {
 	class Renderer final
@@ -29,7 +31,8 @@ namespace dae
 		void InitializeMesh();
 		std::unique_ptr<Mesh> m_pMesh;
 
-
+		//CAMERA
+		std::unique_ptr<Camera> m_pCamera;
 		
 		//DIRECTX
 		bool m_IsInitialized{ false };

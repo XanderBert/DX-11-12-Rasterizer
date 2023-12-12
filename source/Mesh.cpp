@@ -103,3 +103,9 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
         pDeviceContext->DrawIndexed(m_NumIndices, 0, 0);
     }
 }
+
+void Mesh::Update(const dae::Timer* pTimer, const dae::Matrix* worldViewProjectionMatrix)
+{
+    assert(worldViewProjectionMatrix != nullptr && "Mesh::Update() -> worldViewProjectionMatrix is nullptr!");
+    m_pEffect->SetWorldViewProjectionMatrix(worldViewProjectionMatrix);
+}

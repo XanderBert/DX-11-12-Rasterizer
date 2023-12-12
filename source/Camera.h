@@ -4,13 +4,13 @@ namespace dae
     class Camera final
     {
     public:
-        explicit Camera(const Vector3& origin, float fov, float aspectRatio) :
+        Camera(const Vector3& origin, float fov, float aspectRatio) :
             m_Fov(fov * (TO_RADIANS * 0.5f)),
             m_AspectRatio(aspectRatio),
             m_Origin(origin)
         {}
 
-        explicit Camera(const Vector3& origin, float fov, float aspectRatio, float nearPlane, float farPlane) :
+        Camera(const Vector3& origin, float fov, float aspectRatio, float nearPlane, float farPlane) :
             m_Fov(fov * (TO_RADIANS * 0.5f)),
             m_AspectRatio(aspectRatio),
             m_Origin(origin),
@@ -28,7 +28,7 @@ namespace dae
         void Update(const Timer* pTimer);
 
         
-        Matrix GetViewMatrix() const;
+        Matrix GetViewMatrix();
         Matrix GetProjectionMatrix() const;
     
         void SetFOV(float fov) { m_Fov = fov * (TO_RADIANS * 0.5f); }
@@ -47,7 +47,6 @@ namespace dae
 
 
         Vector3 m_Forward = { 0.f, 0.f, 1.f };
-        Vector3 m_Up = { 0.f, 1.f, 0.f };
         Vector3 m_Right = { 1.f, 0.f, 0.f };
 
         float m_Pitch = 0.f;

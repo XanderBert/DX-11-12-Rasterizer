@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "Renderer.h"
+#include "Mesh.h"
 
 #include <cassert>
 
-#include "Mesh.h"
 
 namespace dae {
 
@@ -12,7 +12,10 @@ namespace dae {
 	{
 		//Initialize
 		SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
-
+		
+		const Vector3 origin{ 0.f, 0.f, 0.f };
+		m_pCamera = std::make_unique<Camera>(origin, 100.f, (static_cast<float>(m_Width) / static_cast<float>(m_Height)));
+		
 		//Initialize DirectX pipeline
 		if (InitializeDirectX() == S_OK)
 		{
@@ -46,7 +49,11 @@ namespace dae {
 
 	void Renderer::Update(const Timer* pTimer)
 	{
+		m_pCamera->Update(pTimer);
+
 		
+		const Matrix worldViewProjectionMatrix = m_pCamera->GetViewMatrix() * m_pCamera->GetProjectionMatrix();
+		m_pMesh->Update(pTimer,&worldViewProjectionMatrix);
 	}
 
 

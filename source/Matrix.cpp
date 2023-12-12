@@ -144,21 +144,21 @@ namespace dae {
 		return out;
 	}
 
-	Matrix Matrix::CreateLookAtLH(const Vector3& origin, const Vector3& forward, const Vector3& up)
+	//Returns a left-handed look-at matrix (Inverse View Matrix)
+	Matrix Matrix::CreateLookAtLH(const Vector3& origin, const Vector3& forward)
 	{
-		//origin - eye
-		Vector3 zAxis = forward.Normalized();
-		Vector3 xAxis = Vector3::Cross(up, zAxis).Normalized();
-		Vector3 yAxis = Vector3::Cross(zAxis, xAxis);
-		
+		Vector3 zAxis = forward.Normalized(); // Forward vector
+		Vector3 xAxis = Vector3::Cross(Vector3::UnitY, zAxis).Normalized(); // Right vector
+		Vector3 yAxis = Vector3::Cross(zAxis, xAxis); // Up vector
 		
 		return {
 			xAxis,
 			yAxis,
 			zAxis,
-			{-Vector3::Dot(xAxis, origin), -Vector3::Dot(yAxis, origin), -Vector3::Dot(zAxis, origin)} };
+			origin };
 	}
 
+	
 	Matrix Matrix::CreatePerspectiveFovLH(float fov, float aspect, float zn, float zf)
 	{
 		//cotan(fov * 0.5f)
