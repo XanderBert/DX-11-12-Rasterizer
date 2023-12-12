@@ -76,9 +76,9 @@ namespace dae {
 	{
 		const std::vector<Vertex> vertices
 		{
-			Vertex{ 0.f, 0.5f, 0.f, 1.f, 0.f, 0.f },
-			Vertex{ 0.5f, -0.5f, 0.f, 0.f, 1.f, 0.f },
-			Vertex{ -0.5f, -0.5f, 0.f, 0.f, 0.f, 1.f }
+			Vertex{ 0.f, 3.f, 2.f, 1.f, 0.f, 0.f },
+			Vertex{ 3.f, -3.f, -2.f, 0.f, 1.f, 0.f },
+			Vertex{ -3.f, -3.f, 2.f, 0.f, 0.f, 1.f }
 		};
 		const std::vector<uint32_t> indices
 		{
