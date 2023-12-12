@@ -7,11 +7,13 @@ struct VS_INPUT
 {
 	float3 Position : POSITION;
 	float3 Color : COLOR;
+	float2 TexCoord : TEXCOORD;
 };
 struct VS_OUTPUT
 {
 	float4 Position : SV_POSITION;
 	float3 Color : COLOR;
+	float2 TexCoord : TEXCOORD;
 };
 //------------------------------------------------
 // Vertex Shader
@@ -22,7 +24,7 @@ VS_OUTPUT VS(VS_INPUT input)
 
 	//multiply the World View Projection Matrix with every vertex position
 	output.Position = float4(mul(float4(input.Position, 1.0f), gWorldViewProj));
-
+	output.TexCoord = input.TexCoord;
 	output.Color = input.Color;
 	return output;
 }

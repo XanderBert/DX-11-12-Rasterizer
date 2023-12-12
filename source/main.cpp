@@ -57,7 +57,7 @@ int main(int argc, char* args[])
 				break;
 			case SDL_KEYUP:
 				//Test for a key
-				//if (e.key.keysym.scancode == SDL_SCANCODE_X)
+				if (e.key.keysym.scancode == SDL_SCANCODE_1) pRenderer->IncrementFilter();
 				break;
 			default: ;
 			}

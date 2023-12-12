@@ -4,6 +4,8 @@
 
 #include <cassert>
 
+#include "Utils.h"
+
 
 namespace dae {
 
@@ -13,8 +15,8 @@ namespace dae {
 		//Initialize
 		SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
 		
-		const Vector3 origin{ 0.f, 0.f, 0.f };
-		m_pCamera = std::make_unique<Camera>(origin, 100.f, (static_cast<float>(m_Width) / static_cast<float>(m_Height)));
+		const Vector3 origin{ 0.f, 0.f, -10.f };
+		m_pCamera = std::make_unique<Camera>(origin, 45.f, (static_cast<float>(m_Width) / static_cast<float>(m_Height)));
 		
 		//Initialize DirectX pipeline
 		if (InitializeDirectX() == S_OK)
@@ -79,20 +81,19 @@ namespace dae {
 		m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
 	}
 
+	void Renderer::IncrementFilter() const
+	{
+		m_pMesh->IncrementFilter(m_pDevice, m_pDeviceContext);
+	}
+
 	void Renderer::InitializeMesh()
 	{
-		const std::vector<Vertex> vertices
-		{
-			Vertex{ 0.f, 3.f, 2.f, 1.f, 0.f, 0.f },
-			Vertex{ 3.f, -3.f, -2.f, 0.f, 1.f, 0.f },
-			Vertex{ -3.f, -3.f, 2.f, 0.f, 0.f, 1.f }
-		};
-		const std::vector<uint32_t> indices
-		{
-			0, 1, 2
-		};
-
+		std::vector<Vertex> vertices{};
+		std::vector<uint32_t> indices{};
+		Utils::ParseOBJ("Resources/vehicle.obj", vertices, indices, false);
+		
 		m_pMesh = std::make_unique<Mesh>(m_pDevice, vertices, indices);
+		m_pMesh->SetDiffuseMap("Resources/vehicle_diffuse.png", m_pDevice);
 	}
 
 	HRESULT Renderer::InitializeDirectX()

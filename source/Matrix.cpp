@@ -62,7 +62,7 @@ namespace dae {
 		return TransformPoint(p.x, p.y, p.z, p.w);
 	}
 
-	Vector4 Matrix::TransformPoint(float x, float y, float z, float w) const
+	Vector4 Matrix::TransformPoint(float x, float y, float z, float /*w*/) const
 	{
 		return Vector4{
 			data[0].x * x + data[1].x * y + data[2].x * z + data[3].x,

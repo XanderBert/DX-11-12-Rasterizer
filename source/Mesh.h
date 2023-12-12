@@ -1,11 +1,14 @@
 ﻿#pragma once
+#include "TextureEffect.h"
 
 struct Vertex
 {
-    float x, y, z;
-    float r, g, b;
+    dae::Vector3 position;
+    dae::Vector3 normal;
+    dae::Vector2 uv;
 };
 
+class Texture;
 class Effect;
 class Mesh final
 {
@@ -22,15 +25,18 @@ public:
     void Render(ID3D11DeviceContext* pDeviceContext) const;
     void Update(const dae::Timer* pTimer, const dae::Matrix* worldViewProjectionMatrix);
 
+    void SetDiffuseMap(const std::string& assetLocation, ID3D11Device* pDevice);
+    void IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
+
 private:
     ID3D11Buffer* m_pVertexBuffer{ nullptr };
     ID3D11InputLayout* m_pInputLayout{ nullptr };
     ID3D11Buffer* m_pIndexBuffer{ nullptr };
-    
-    Effect* m_pEffect{ nullptr };
 
+    Texture* m_pTexture{ nullptr };
+    TextureEffect* m_pEffect{ nullptr };
     
     uint32_t m_NumIndices{ 0 };
 
-    
+    D3D11_FILTER m_SamplerFilter{ D3D11_FILTER_MIN_MAG_MIP_LINEAR };
 };

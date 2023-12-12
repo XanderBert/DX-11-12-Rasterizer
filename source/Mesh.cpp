@@ -1,18 +1,18 @@
 ﻿#include "pch.h"
 #include "Mesh.h"
 
-#include <cassert>
-#include "Effect.h"
+#include "PosCol3DEffect.h"
+#include "Texture.h"
 
 Mesh::Mesh(ID3D11Device* pDevice, const std::vector<Vertex>& vertices,const  std::vector<uint32_t>& indices)
     : m_NumIndices(static_cast<uint32_t>(indices.size()))
 {
     //There could be 1 instance of the effect class, that will be used over multiple meshes.
-   m_pEffect = new Effect(pDevice, L"Resources/PosCol3D.fx", "DefaultTechnique");
-
+    m_pEffect = new TextureEffect(pDevice, L"Resources/TextureShader3D.fx", "DefaultTechnique");
+    assert(m_pEffect != nullptr && "Mesh::Mesh() -> Failed to create effect!");
     
     // • Create the vertex layout using, again, a matching descriptor.
-    static constexpr uint32_t numElements{ 2 };
+    static constexpr uint32_t numElements{ 3 };
     D3D11_INPUT_ELEMENT_DESC vertexDescription[numElements]{};
 
     vertexDescription[0].SemanticName = "POSITION";
@@ -22,9 +22,14 @@ Mesh::Mesh(ID3D11Device* pDevice, const std::vector<Vertex>& vertices,const  std
     
     vertexDescription[1].SemanticName = "COLOR";
     vertexDescription[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-    vertexDescription[1].AlignedByteOffset = 12;
+    vertexDescription[1].AlignedByteOffset = sizeof(float) * 3;
     vertexDescription[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-    
+
+    vertexDescription[2].SemanticName = "TEXCOORD";
+    vertexDescription[2].Format = DXGI_FORMAT_R32G32_FLOAT;
+    vertexDescription[2].AlignedByteOffset = sizeof(float) * 6;
+    vertexDescription[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+
     
     // • Through the technique of the effect, create the input layout, using the vertex layout descriptor.
     D3DX11_PASS_DESC passDesc{};
@@ -65,6 +70,7 @@ Mesh::~Mesh()
     if (m_pInputLayout) m_pInputLayout->Release();
     if (m_pIndexBuffer) m_pIndexBuffer->Release();
     delete m_pEffect;
+    delete m_pTexture;
 }
 
 void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
@@ -104,8 +110,68 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
     }
 }
 
-void Mesh::Update(const dae::Timer* pTimer, const dae::Matrix* worldViewProjectionMatrix)
+void Mesh::Update(const dae::Timer* /*pTimer*/, const dae::Matrix* worldViewProjectionMatrix)
 {
     assert(worldViewProjectionMatrix != nullptr && "Mesh::Update() -> worldViewProjectionMatrix is nullptr!");
-    m_pEffect->SetWorldViewProjectionMatrix(worldViewProjectionMatrix);
+	m_pEffect->SetWorldViewProjectionMatrix(worldViewProjectionMatrix);
+}
+
+void Mesh::SetDiffuseMap(const std::string& assetLocation, ID3D11Device* pDevice )
+{
+    //Delete the old texture
+    delete m_pTexture;
+    m_pTexture = nullptr;
+
+
+    //Set the new Texture
+     m_pTexture = new Texture(assetLocation, pDevice);
+    if(m_pTexture)
+        m_pEffect->SetDiffuseMap( m_pTexture->GetTextureView());
+}
+
+void Mesh::IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
+{
+
+
+    
+    // Increment the current filter
+    if (m_SamplerFilter == D3D11_FILTER_MIN_MAG_MIP_POINT)
+    {
+        m_SamplerFilter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    }
+    else if (m_SamplerFilter == D3D11_FILTER_MIN_MAG_MIP_LINEAR)
+    {
+        m_SamplerFilter = D3D11_FILTER_ANISOTROPIC;
+    }
+    else
+    {
+        m_SamplerFilter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+    }
+
+
+    std::cout << "Mesh::IncrementFilter() -> Sampler Filter: " << m_SamplerFilter << std::endl;
+    
+    D3D11_SAMPLER_DESC sampDesc{};
+    
+    sampDesc.Filter = m_SamplerFilter; 
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    // Create a ID3D11SamplerState object
+    ID3D11SamplerState* pSamState;
+    const HRESULT hr = pDevice->CreateSamplerState(&sampDesc, &pSamState);
+
+    
+    assert(SUCCEEDED(hr) && "Mesh::SetSamplerFilter() -> Failed to create sampler state!");
+    if(FAILED(hr))
+    {
+        std::cout << "Mesh::SetSamplerFilter() -> Failed to create sampler state!" << std::endl;
+    }
+
+    //Change the sampler at register 0
+    pDeviceContext->PSSetSamplers(0, 1, &pSamState);
 }
