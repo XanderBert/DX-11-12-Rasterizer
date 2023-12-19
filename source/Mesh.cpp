@@ -7,28 +7,46 @@
 Mesh::Mesh(ID3D11Device* pDevice, const std::vector<Vertex>& vertices,const  std::vector<uint32_t>& indices)
     : m_NumIndices(static_cast<uint32_t>(indices.size()))
 {
+    //Mapping the texture type to a texture pointer
+    //Drawback only 1 texture per type
+    //Drawback: Texture instancing is impossible
+    m_TextureMap[TextureType::Diffuse] = { nullptr };
+    m_TextureMap[TextureType::Normal] = { nullptr };
+    m_TextureMap[TextureType::Specular] = { nullptr };
+    m_TextureMap[TextureType::Glossiness] = { nullptr };
+    
     //There could be 1 instance of the effect class, that will be used over multiple meshes.
     m_pEffect = new TextureEffect(pDevice, L"Resources/TextureShader3D.fx", "DefaultTechnique");
     assert(m_pEffect != nullptr && "Mesh::Mesh() -> Failed to create effect!");
     
     // • Create the vertex layout using, again, a matching descriptor.
-    static constexpr uint32_t numElements{ 3 };
+    static constexpr uint32_t numElements{ 4 };
     D3D11_INPUT_ELEMENT_DESC vertexDescription[numElements]{};
 
+    //Position
     vertexDescription[0].SemanticName = "POSITION";
     vertexDescription[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
     vertexDescription[0].AlignedByteOffset = 0;
     vertexDescription[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-    
-    vertexDescription[1].SemanticName = "COLOR";
+
+
+    //Normal
+    vertexDescription[1].SemanticName = "NORMAL";
     vertexDescription[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
     vertexDescription[1].AlignedByteOffset = sizeof(float) * 3;
     vertexDescription[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 
-    vertexDescription[2].SemanticName = "TEXCOORD";
-    vertexDescription[2].Format = DXGI_FORMAT_R32G32_FLOAT;
+    //Tanget
+    vertexDescription[2].SemanticName = "TANGENT";
+    vertexDescription[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
     vertexDescription[2].AlignedByteOffset = sizeof(float) * 6;
     vertexDescription[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+
+    //UV
+    vertexDescription[3].SemanticName = "TEXCOORD";
+    vertexDescription[3].Format = DXGI_FORMAT_R32G32_FLOAT;
+    vertexDescription[3].AlignedByteOffset = sizeof(float) * 9;
+    vertexDescription[3].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 
     
     // • Through the technique of the effect, create the input layout, using the vertex layout descriptor.
@@ -70,7 +88,9 @@ Mesh::~Mesh()
     if (m_pInputLayout) m_pInputLayout->Release();
     if (m_pIndexBuffer) m_pIndexBuffer->Release();
     delete m_pEffect;
-    delete m_pTexture;
+
+    //Delete the textures
+    //TODO the mesh does take ownership  of the textures, This makes texture instancing impossible
 }
 
 void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
@@ -116,24 +136,25 @@ void Mesh::Update(const dae::Timer* /*pTimer*/, const dae::Matrix* worldViewProj
 	m_pEffect->SetWorldViewProjectionMatrix(worldViewProjectionMatrix);
 }
 
-void Mesh::SetDiffuseMap(const std::string& assetLocation, ID3D11Device* pDevice )
+void Mesh::CreateTexture(const std::string& assetLocation, ID3D11Device* pDevice, Texture*& pTexture)
 {
     //Delete the old texture
-    delete m_pTexture;
-    m_pTexture = nullptr;
-
-
+    delete pTexture;
+    pTexture = nullptr;
+    
     //Set the new Texture
-     m_pTexture = new Texture(assetLocation, pDevice);
-    if(m_pTexture)
-        m_pEffect->SetDiffuseMap( m_pTexture->GetTextureView());
+    pTexture = new Texture(assetLocation, pDevice);
+}
+
+void Mesh::SetTextureMap(const std::string& assetLocation, ID3D11Device* pDevice, TextureType type)
+{
+    Texture*& pTexture = m_TextureMap[type];
+    CreateTexture(assetLocation, pDevice, pTexture);
+    m_pEffect->SetTextureMap(type, pTexture->GetTextureView());
 }
 
 void Mesh::IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 {
-
-
-    
     // Increment the current filter
     if (m_SamplerFilter == D3D11_FILTER_MIN_MAG_MIP_POINT)
     {

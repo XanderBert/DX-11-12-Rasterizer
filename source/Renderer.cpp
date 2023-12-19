@@ -93,7 +93,7 @@ namespace dae {
 		Utils::ParseOBJ("Resources/vehicle.obj", vertices, indices, false);
 		
 		m_pMesh = std::make_unique<Mesh>(m_pDevice, vertices, indices);
-		m_pMesh->SetDiffuseMap("Resources/vehicle_diffuse.png", m_pDevice);
+		m_pMesh->SetTextureMap("Resources/vehicle_diffuse.png", m_pDevice, TextureType::Diffuse);
 	}
 
 	HRESULT Renderer::InitializeDirectX()

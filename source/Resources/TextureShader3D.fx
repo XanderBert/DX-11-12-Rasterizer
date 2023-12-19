@@ -1,15 +1,23 @@
 //global variables
 //
 float4x4 gWorldViewProj : WorldViewProjection;
+
 Texture2D gDiffuseMap : DiffuseMap;
+Texture2D gNormalMap : NormalMap;
+Texture2D gSpecularMap : SpecularMap;
+Texture2D gGlossinessMap : GlossinessMap;
 
 
 struct VS_INPUT
 {
 	float3 Position : POSITION;
-	float3 Color : COLOR;
+	float3 Normal : NORMAL;
+	float3 Tangent : TANGENT;
 	float2 TexCoord : TEXCOORD;
 };
+
+
+
 struct VS_OUTPUT
 {
 	float4 Position : SV_POSITION;
@@ -26,7 +34,7 @@ VS_OUTPUT VS(VS_INPUT input)
 	//multiply the World View Projection Matrix with every vertex position
 	output.Position = float4(mul(float4(input.Position, 1.0f), gWorldViewProj));
 	output.TexCoord = input.TexCoord;
-	output.Color = input.Color;
+	output.Color = input.Normal;
 	return output;
 }
 
