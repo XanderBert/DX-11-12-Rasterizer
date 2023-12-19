@@ -94,6 +94,9 @@ namespace dae {
 		
 		m_pMesh = std::make_unique<Mesh>(m_pDevice, vertices, indices);
 		m_pMesh->SetTextureMap("Resources/vehicle_diffuse.png", m_pDevice, TextureType::Diffuse);
+		m_pMesh->SetTextureMap("Resources/vehicle_normal.png", m_pDevice, TextureType::Normal);
+		m_pMesh->SetTextureMap("Resources/vehicle_specular.png", m_pDevice, TextureType::Specular);
+		m_pMesh->SetTextureMap("Resources/vehicle_gloss.png", m_pDevice, TextureType::Glossiness);
 	}
 
 	HRESULT Renderer::InitializeDirectX()

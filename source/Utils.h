@@ -118,44 +118,44 @@ namespace dae
 			}
 
 			//Cheap Tangent Calculations
-			// for (uint32_t i = 0; i < indices.size(); i += 3)
-			// {
-			// 	uint32_t index0 = indices[i];
-			// 	uint32_t index1 = indices[size_t(i) + 1];
-			// 	uint32_t index2 = indices[size_t(i) + 2];
-			//
-			// 	const Vector3& p0 = vertices[index0].position;
-			// 	const Vector3& p1 = vertices[index1].position;
-			// 	const Vector3& p2 = vertices[index2].position;
-			// 	const Vector2& uv0 = vertices[index0].uv;
-			// 	const Vector2& uv1 = vertices[index1].uv;
-			// 	const Vector2& uv2 = vertices[index2].uv;
-			//
-			// 	const Vector3 edge0 = p1 - p0;
-			// 	const Vector3 edge1 = p2 - p0;
-			// 	const Vector2 diffX = Vector2(uv1.x - uv0.x, uv2.x - uv0.x);
-			// 	const Vector2 diffY = Vector2(uv1.y - uv0.y, uv2.y - uv0.y);
-			// 	float r = 1.f / Vector2::Cross(diffX, diffY);
+			 for (uint32_t i = 0; i < indices.size(); i += 3)
+			 {
+			 	uint32_t index0 = indices[i];
+			 	uint32_t index1 = indices[size_t(i) + 1];
+			 	uint32_t index2 = indices[size_t(i) + 2];
+			
+			 	const Vector3& p0 = vertices[index0].position;
+			 	const Vector3& p1 = vertices[index1].position;
+			 	const Vector3& p2 = vertices[index2].position;
+			 	const Vector2& uv0 = vertices[index0].uv;
+			 	const Vector2& uv1 = vertices[index1].uv;
+			 	const Vector2& uv2 = vertices[index2].uv;
+			
+			 	const Vector3 edge0 = p1 - p0;
+			 	const Vector3 edge1 = p2 - p0;
+			 	const Vector2 diffX = Vector2(uv1.x - uv0.x, uv2.x - uv0.x);
+			 	const Vector2 diffY = Vector2(uv1.y - uv0.y, uv2.y - uv0.y);
+			 	float r = 1.f / Vector2::Cross(diffX, diffY);
 
-			// 	Vector3 tangent = (edge0 * diffY.y - edge1 * diffY.x) * r;
-			// 	vertices[index0].tangent += tangent;
-			// 	vertices[index1].tangent += tangent;
-			// 	vertices[index2].tangent += tangent;
-			// }
-			//
-			// //Create the Tangents (reject)
-			// for (auto& v : vertices)
-			// {
-			// 	v.tangent = Vector3::Reject(v.tangent, v.normal).Normalized();
-			//
-			// 	if(flipAxisAndWinding)
-			// 	{
-			// 		v.position.z *= -1.f;
-			// 		v.normal.z *= -1.f;
-			// 		v.tangent.z *= -1.f;
-			// 	}
-			//
-			// }
+			 	Vector3 tangent = (edge0 * diffY.y - edge1 * diffY.x) * r;
+			 	vertices[index0].tangent += tangent;
+			 	vertices[index1].tangent += tangent;
+			 	vertices[index2].tangent += tangent;
+			 }
+			
+			 //Create the Tangents (reject)
+			 for (auto& v : vertices)
+			 {
+			 	v.tangent = Vector3::Reject(v.tangent, v.normal).Normalized();
+			
+			 	if(flipAxisAndWinding)
+			 	{
+			 		v.position.z *= -1.f;
+			 		v.normal.z *= -1.f;
+			 		v.tangent.z *= -1.f;
+			 	}
+			
+			 }
 
 			return true;
 		}

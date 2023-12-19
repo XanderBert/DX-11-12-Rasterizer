@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "Mesh.h"
 
+#include <ranges>
+
 #include "PosCol3DEffect.h"
 #include "Texture.h"
 
@@ -91,6 +93,14 @@ Mesh::~Mesh()
 
     //Delete the textures
     //TODO the mesh does take ownership  of the textures, This makes texture instancing impossible
+    for(const auto& texture : m_TextureMap | std::views::values)
+    {
+        delete texture;
+    }
+
+    m_TextureMap.clear();
+
+    
 }
 
 void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
@@ -153,6 +163,7 @@ void Mesh::SetTextureMap(const std::string& assetLocation, ID3D11Device* pDevice
     m_pEffect->SetTextureMap(type, pTexture->GetTextureView());
 }
 
+//TODO: Clean this up
 void Mesh::IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 {
     // Increment the current filter
