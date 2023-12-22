@@ -140,10 +140,20 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
     }
 }
 
-void Mesh::Update(const dae::Timer* /*pTimer*/, const dae::Matrix* worldViewProjectionMatrix)
+void Mesh::Update(const dae::Timer* pTimer, dae::Matrix* worldViewProjectionMatrix, dae::Matrix* viewInverseMatrix, dae::Vector3* cameraPosition)
 {
     assert(worldViewProjectionMatrix != nullptr && "Mesh::Update() -> worldViewProjectionMatrix is nullptr!");
-	m_pEffect->SetWorldViewProjectionMatrix(worldViewProjectionMatrix);
+    m_pEffect->SetWorldViewProjectionMatrix(worldViewProjectionMatrix);
+
+    assert(viewInverseMatrix != nullptr && "Mesh::Update() -> viewInverseMatrix is nullptr!");
+    //m_pEffect->SetViewInverseMatrix(viewInverseMatrix);
+
+    const dae::Matrix rotationMatrix = dae::Matrix::CreateRotationY(pTimer->GetElapsed());
+    m_WorldMatrix *= rotationMatrix;
+    
+    m_pEffect->SetWorldMatrix(&m_WorldMatrix); // Use the combined matrix for the model transformation
+
+    m_pEffect->SetCameraPosition(cameraPosition);
 }
 
 void Mesh::CreateTexture(const std::string& assetLocation, ID3D11Device* pDevice, Texture*& pTexture)
@@ -166,6 +176,9 @@ void Mesh::SetTextureMap(const std::string& assetLocation, ID3D11Device* pDevice
 //TODO: Clean this up
 void Mesh::IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 {
+    assert(pDevice != nullptr && "Mesh::IncrementFilter() -> pDevice is nullptr!");
+    assert(pDeviceContext != nullptr && "Mesh::IncrementFilter() -> pDeviceContext is nullptr!");
+    
     // Increment the current filter
     if (m_SamplerFilter == D3D11_FILTER_MIN_MAG_MIP_POINT)
     {

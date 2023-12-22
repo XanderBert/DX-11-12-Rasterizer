@@ -30,6 +30,9 @@ namespace dae
         
         Matrix GetViewMatrix();
         Matrix GetProjectionMatrix() const;
+        Matrix GetViewInverseMatrix() { return Matrix::Inverse(GetViewMatrix()); }
+
+        Vector3 GetPosition() const { return m_Origin; }
     
         void SetFOV(float fov) { m_Fov = fov * (TO_RADIANS * 0.5f); }
         float GetFOV() const { return m_Fov; }

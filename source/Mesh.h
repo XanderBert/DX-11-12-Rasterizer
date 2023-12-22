@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <map>
-
+#include "Matrix.h"
 #include "TextureEffect.h"
 
 struct Vertex
@@ -25,7 +25,7 @@ public:
     Mesh& operator=(Mesh&&) noexcept = delete;
     
     void Render(ID3D11DeviceContext* pDeviceContext) const;
-    void Update(const dae::Timer* pTimer, const dae::Matrix* worldViewProjectionMatrix);
+    void Update(const dae::Timer* pTimer, dae::Matrix* worldViewProjectionMatrix, dae::Matrix* viewInverseMatrix, dae::Vector3* cameraPosition);
     
     
     
@@ -46,4 +46,6 @@ private:
     TextureEffect* m_pEffect{ nullptr };
     uint32_t m_NumIndices{ 0 };
     D3D11_FILTER m_SamplerFilter{ D3D11_FILTER_MIN_MAG_MIP_LINEAR };
+
+    dae::Matrix m_WorldMatrix{dae::Matrix::Identity()};
 };

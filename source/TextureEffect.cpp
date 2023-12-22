@@ -18,6 +18,17 @@ TextureEffect::TextureEffect(ID3D11Device* pDevice, const std::wstring& assetFil
     //Glossiness map
     m_pGlossinessVariable = m_pEffect->GetVariableByName("gGlossinessMap")->AsShaderResource();
     assert(m_pGlossinessVariable->IsValid() && "TextureEffect::TextureEffect() -> GetVariableByName() not valid!");
+    
+
+    // m_pViewInverseMatrixVariable = m_pEffect->GetVariableByName("gViewInverseMatrix")->AsMatrix();
+    // assert(m_pViewInverseMatrixVariable->IsValid() && "Effect::Effect() -> gViewInverseMatrix variable not valid!");
+
+    m_pCameraPositionVariable = m_pEffect->GetVariableByName("gCameraPosition")->AsVector();
+    assert(m_pCameraPositionVariable->IsValid() && "Effect::Effect() -> gCameraPosition variable not valid!");
+    
+
+    m_pWorldMatrixVariable = m_pEffect->GetVariableByName("gWorldmatrix")->AsMatrix();
+    assert(m_pWorldMatrixVariable->IsValid() && "Effect::Effect() -> gWorldmatrix variable not valid!");
 }
 
 void TextureEffect::SetTextureMap(TextureType type, ID3D11ShaderResourceView* pResourceView) const
@@ -42,4 +53,20 @@ void TextureEffect::SetTextureMap(TextureType type, ID3D11ShaderResourceView* pR
             break;
         }
     }
+}
+
+void TextureEffect::SetWorldMatrix(const dae::Matrix* worldMatrix) const
+{
+    m_pWorldMatrixVariable->SetMatrix(reinterpret_cast<const float*>(worldMatrix));
+}
+
+void TextureEffect::SetCameraPosition(const dae::Vector3* cameraPosition) const
+{
+    m_pCameraPositionVariable->SetFloatVector(reinterpret_cast<const float*>(cameraPosition));
+}
+
+
+void TextureEffect::SetViewInverseMatrix(const dae::Matrix* viewInverseMatrix) const
+{
+    m_pViewInverseMatrixVariable->SetMatrix(reinterpret_cast<const float*>(viewInverseMatrix));
 }

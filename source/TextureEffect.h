@@ -23,6 +23,10 @@ public:
     TextureEffect& operator=(TextureEffect&&) noexcept = delete;
 
     void SetTextureMap(TextureType type, ID3D11ShaderResourceView* pResourceView) const;
+
+    void SetViewInverseMatrix(const dae::Matrix* viewInverseMatrix) const;
+    void SetWorldMatrix(const dae::Matrix* worldMatrix) const;
+    void SetCameraPosition(const dae::Vector3* cameraPosition) const;
     
 protected:
     //TODO: There should be a way to just add and remove textures instead of having a fixed set of textures
@@ -31,4 +35,10 @@ protected:
     ID3DX11EffectShaderResourceVariable* m_pNormalMapVariable{ nullptr };
     ID3DX11EffectShaderResourceVariable* m_pSpecularMapVariable{ nullptr };
     ID3DX11EffectShaderResourceVariable* m_pGlossinessVariable{ nullptr };
+    
+    ID3DX11EffectMatrixVariable* m_pViewInverseMatrixVariable{ nullptr };
+    ID3DX11EffectMatrixVariable* m_pWorldMatrixVariable{ nullptr };
+
+    //Try this instead of the viewInverse;
+    ID3DX11EffectVectorVariable* m_pCameraPositionVariable{ nullptr };
 };

@@ -1,31 +1,35 @@
-//global variables
-//
-bool gUseSpecularPhong = true;
-bool gUseSpecularBlinn = false;
-bool gUseTextureNormal = true;
-bool gFlipGreenChannel = false;
-bool gUseTextureSpecularIntensity = true;
-float3 gColorSpecular = float3(1,1,1);
+//Static variables
+const static bool gUseSpecularPhong = true;
+const static bool gUseSpecularBlinn = false;
+const static bool gUseTextureSpecularIntensity = true;
+const static float3 gColorSpecular = float3(1,1,1);
 
-float4x4 gWorldViewProj : WorldViewProjection;
-float4x4 gWorldMatrix : WorldMatrix;
+const static bool gUseTextureNormal = true;
+const static bool gFlipGreenChannel = true;
 
-float3 gCameraPos : CameraPosition;
+const static bool gUseHalfLambert = true;
+const static bool gUseCookTorrance = false;
 
-float gPi  = 3.1415;
-float gShininess = 1.0f;
+const static float3 gLightDirection : LightDirection = float3(0.577f, -0.577f, 0.577f);
+const static float3 gLightColor : LightColor = float3(1,1,1);
+const static float gPi  = 3.14159265359;
+const static float gShininess = 1.25f;
 
-Texture2D gDiffuseMap : DiffuseMap;
-Texture2D gNormalMap : NormalMap;
-Texture2D gSpecularMap : SpecularMap;
-Texture2D gGlossinessMap : GlossinessMap;
 
-float3 gLightDirection : LightDirection = float3(0.577f, -0.577f, 0.577f);
+//Should be grouped in a constant buffer
+uniform extern float4x4 gWorldViewProj : WorldViewProjection;
+uniform extern float4x4 gWorldmatrix : WorldMatrix;
+uniform extern float3 gCameraPosition : Camera;
 
-//SamplerState gSampler
-//Register 0
-SamplerState samPoint : register(s0)
-{
+//Textures
+uniform extern Texture2D gDiffuseMap : DiffuseMap;
+uniform extern Texture2D gNormalMap : NormalMap;
+uniform extern Texture2D gSpecularMap : SpecularMap;
+uniform extern Texture2D gGlossinessMap : GlossinessMap;
+
+
+SamplerState gSampler : register(s0)
+{ 
 	Filter = MIN_MAG_MIP_LINEAR;
  	AddressU = WRAP;
 	AddressV = WRAP;
@@ -33,7 +37,7 @@ SamplerState samPoint : register(s0)
 };
 
 
-struct VS_INPUT
+struct VertexShaderInput
 {
 	float3 Position : POSITION;
 	float3 Normal : NORMAL;
@@ -43,16 +47,18 @@ struct VS_INPUT
 
 
 
-struct VS_OUTPUT
+struct VertexShaderOutput
 {
 	float4 Position : SV_POSITION;
+	float4 WorldPosition: POSITION;
 	float3 Normal: NORMAL;
 	float3 Tangent: TANGENT;
 	float2 TexCoord : TEXCOORD0;
 };
 
 
-float3 CalculateSpecularBlinn(float3 viewDirection, float3 normal, float2 texCoord)
+
+float3 CalculateSpecularBlinn(float3 viewDirection, float3 normal)
 {
 	//H = normalize(ViewDirection + LightDirection)
 	//N = normal
@@ -61,45 +67,47 @@ float3 CalculateSpecularBlinn(float3 viewDirection, float3 normal, float2 texCoo
 	//Calculate the halfvector
    	float3 halfVector = normalize(viewDirection + gLightDirection);
 	
-	//Calculate the Specular value and use max() to keep it positive.
-	float specularValue = max(dot(normal, halfVector), 0.0);
+	//Calculate the specular value
+	float specularValue = saturate(dot(normal, halfVector));
 	
 	//Return SpecularValue
 	return float3(specularValue, specularValue, specularValue);
 }
 
-float3 CalculateSpecularPhong(float3 viewDirection, float3 normal, float2 texCoord)
+float3 CalculateSpecularPhong(float3 viewDirection, float3 normal)
 {	
 	//Calculate the refelection
 	float3 reflectionDirection = reflect(-gLightDirection, normal);
 	
-	//Calculate the specularValue value and use max() to keep it positive.
-	float specularValue = max(dot(reflectionDirection, viewDirection), 0.0);
+	//Calculate the specular value
+	float specularValue = saturate(dot(reflectionDirection, viewDirection));
 	
-	//Return SpecularValue
+	//Return specularValue
 	return float3(specularValue, specularValue, specularValue);
 }
 
 float3 CalculateSpecular(float3 viewDirection, float3 normal, float2 texCoord)
 {	
-	float3 specularValue = float3(0,0,0);
+	float3 specularValue = float3(0, 0, 0);
 
-	if(gUseSpecularPhong) specularValue = CalculateSpecularPhong(viewDirection, normal, texCoord);
-	if(gUseSpecularBlinn) specularValue = CalculateSpecularBlinn(viewDirection, normal, texCoord);
+	if(gUseSpecularPhong) specularValue = CalculateSpecularPhong(viewDirection, normal);
+	if(gUseSpecularBlinn) specularValue = CalculateSpecularBlinn(viewDirection, normal);
 	
-	//Tone Down on the refelctions with the power
-  	float specularPower = pow(specularValue, gShininess);
+	//Tone Down on the refelctions with the power of the glossiness map
+	float specularExp = gShininess * gGlossinessMap.Sample(gSampler, texCoord).r;
+
+  	float specularPower = pow(specularValue, specularExp);
 	
 	if(gUseTextureSpecularIntensity)
 	{
-		float3 specTexture = gSpecularMap.Sample(samPoint, texCoord);
+		float3 specTexture = gSpecularMap.Sample(gSampler, texCoord);
 		
 		//Return the Specular
-		return gColorSpecular * specularPower * specTexture;
+		return normalize(gColorSpecular) * specularPower * specTexture;
 	}
 	
 	//Return the Specular
-	return gColorSpecular * specularPower;
+	return normalize(gColorSpecular) * specularPower;
 }
 
 float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
@@ -108,7 +116,7 @@ float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
 		
 	if(gUseTextureNormal)
 	{
-		float3 normalMap = gNormalMap.Sample(samPoint, texCoord);
+		float3 normalMap = gNormalMap.Sample(gSampler, texCoord);
 	
 		newNormal.x = 2 * normalMap.x - 1;
 		newNormal.y = 2 * normalMap.y - 1;
@@ -121,12 +129,62 @@ float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
 }
 
 
+float3 CalculateCookTorrance(float3 normal, float3 viewDir, float3 lightDir, float roughness, float metallic, float3 albedo, float3 F0)
+{
+    float3 H = normalize(lightDir + viewDir);
+    float NdotH = max(dot(normal, H), 0.0);
+    float NdotV = max(dot(normal, viewDir), 0.0);
+    float NdotL = max(dot(normal, lightDir), 0.0);
+    float VdotH = max(dot(viewDir, H), 0.0);
 
+    // Geometric attenuation
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float G = 2.0 / (1.0 + sqrt(1.0 + a2 * (1.0 - NdotV * NdotV) / (NdotV * NdotV)));
 
-float3 CalculateDiffuse(float3 normal, float2 texCoord)
+    // Roughness (or microfacet distribution)
+    float D = exp((NdotH * NdotH - 1.0) / (a2 * NdotH * NdotH)) / (3.14159 * a2 * NdotH * NdotH * NdotH * NdotH);
+
+    // Fresnel
+    float3 F = F0 + (1.0 - F0) * pow(1.0 - VdotH, 5.0);
+
+    // Specular
+    float3 kS = F;
+    float3 kD = (1.0 - kS) * (1.0 - metallic);
+    float3 spec = (D * G * F) / (4.0 * NdotL * NdotV + 0.001); // prevent divide by zero
+
+    // Add to diffuse the light
+    float3 diffColor = kD * albedo / 3.14159;
+    float3 specColor = spec;
+
+    return diffColor + specColor;
+}
+
+float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection)
 {
 	//Get the diffuse color from the diffuse map
-	float3 diffColor = gDiffuseMap.Sample(samPoint, texCoord);
+	float3 diffColor = gDiffuseMap.Sample(gSampler, texCoord);
+	
+
+	
+	if(gUseCookTorrance)
+	{
+		// Get the roughness, metallic, and ao from their respective maps
+    	//float roughness = gRoughnessMap.Sample(gSampler, texCoord).r;
+		float roughness = 0.5;
+    	//float metallic = gMetallicMap.Sample(gSampler, texCoord).r;
+		float metallic = 0.5;
+    	//float ao = gAOMap.Sample(gSampler, texCoord).r;
+
+		// Calculate the Cook-Torrance BRDF
+		float3 F0 = float3(0.04, 0.04, 0.04); // F0 for dielectrics
+		float3 bdrf = CalculateCookTorrance(normal, viewDirection, gLightDirection, roughness, metallic, diffColor, F0);
+		bdrf *= normalize(gLightColor);
+		//bdrf *= ao;
+
+		return bdrf;
+	}
+
 	
 	//Calculate the strenght with the angle beween light and normal
 	//use saturate() to clamp that value between [0, 1]
@@ -134,9 +192,8 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord)
 	
 	//Calculate the half lambert
 	float3 lambert = pow(diffuseStrength * 0.5 + 0.5, 2.0);
-	
-	//If we won't use a half lambert set lambert to the strength so we get a normal lambert
-	//if(!gUseHalfLambert) lambert = diffuseStrength;
+
+	if(!gUseHalfLambert) lambert = diffuseStrength / gPi;
 	
 	//Calculate the diffuse color
     diffColor = diffColor * lambert;
@@ -151,49 +208,52 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord)
 //------------------------------------------------
 // Vertex Shader
 //------------------------------------------------
-VS_OUTPUT VS(VS_INPUT input)
+VertexShaderOutput VS(VertexShaderInput input)
 {
-	VS_OUTPUT output = (VS_OUTPUT)0;
+	VertexShaderOutput output = (VertexShaderOutput)0;
 	
 	//multiply the World View Projection Matrix with every vertex position
 	output.Position = float4(mul(float4(input.Position, 1.0f), gWorldViewProj));
-
-	//TODO: MULTIPLY WITH WORLD NOT WITH WORLDVIEWPROJ
-	output.Normal = mul(input.Normal, (float3x3)gWorldViewProj);
-	output.Tangent = mul(input.Tangent, (float3x3)gWorldViewProj);
+	
+	output.WorldPosition = mul(float4(input.Position, 1.0f), gWorldmatrix);
+	output.Normal = mul(input.Normal, (float3x3)gWorldmatrix);
+	output.Tangent = mul(input.Tangent, (float3x3)gWorldmatrix);
 	output.TexCoord = input.TexCoord;
 
 
 	return output;
 }
 
+void CalculateViewDirection(float3 worldPos, out float3 viewDirection)
+{
+	float invViewDirection = normalize(gCameraPosition - worldPos);
+	viewDirection = -invViewDirection;
+}
 
 
 
 //------------------------------------------------
 // Pixel Shader
 //------------------------------------------------
-float4 PS(VS_OUTPUT input) : SV_TARGET
+float4 PS(VertexShaderOutput pixelShaderInput) : SV_TARGET
 {
 	// NORMALIZE
-	input.Normal = normalize(input.Normal);
-	input.Tangent = normalize(input.Tangent);
+	pixelShaderInput.Normal = normalize(pixelShaderInput.Normal);
+	pixelShaderInput.Tangent = normalize(pixelShaderInput.Tangent);
 
-	//float3 viewDirectionMinus = normalize(input.WorldPosition.xyz - gMatrixViewInverse[3].xyz);
-	//float3 viewDirection = -viewDirectionMinus;
-	float3 viewDirection = float3(1,0,1);
+
+	float3 viewDirection;
+	CalculateViewDirection(pixelShaderInput.WorldPosition.xyz, viewDirection);
 	
-
 	//NORMAL
-	float3 newNormal = CalculateNormal(input.Tangent, input.Normal, input.TexCoord);
+	float3 newNormal = CalculateNormal(pixelShaderInput.Tangent, pixelShaderInput.Normal, pixelShaderInput.TexCoord);
 
 	//SPECULAR
-	float3 specColor = CalculateSpecular(viewDirection, newNormal, input.TexCoord);
+	float3 specColor = CalculateSpecular(viewDirection, newNormal, pixelShaderInput.TexCoord);
 	
 		
-		
 	//DIFFUSE
-	float3 diffColor = CalculateDiffuse(newNormal, input.TexCoord);
+	float3 diffColor = CalculateDiffuse(newNormal, pixelShaderInput.TexCoord,  viewDirection);
 
 	//FINAL COLOR
 	float3 finalColor = diffColor + specColor;

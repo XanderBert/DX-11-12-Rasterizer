@@ -30,7 +30,7 @@ namespace dae {
 
 		const Matrix& Transpose();
 		const Matrix& Inverse();
-
+		
 		Vector3 GetAxisX() const;
 		Vector3 GetAxisY() const;
 		Vector3 GetAxisZ() const;
@@ -47,6 +47,7 @@ namespace dae {
 		static Matrix CreateScale(const Vector3& s);
 		static Matrix Transpose(const Matrix& m);
 		static Matrix Inverse(const Matrix& m);
+		static Matrix Identity();
 
 		static Matrix CreateLookAtLH(const Vector3& origin, const Vector3& forward);
 		static Matrix CreatePerspectiveFovLH(float fovy, float aspect, float zn, float zf);

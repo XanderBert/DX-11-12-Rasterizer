@@ -15,7 +15,7 @@ namespace dae {
 		//Initialize
 		SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
 		
-		const Vector3 origin{ 0.f, 0.f, -10.f };
+		const Vector3 origin{ 0.f, 0.f, -50.f };
 		m_pCamera = std::make_unique<Camera>(origin, 45.f, (static_cast<float>(m_Width) / static_cast<float>(m_Height)));
 		
 		//Initialize DirectX pipeline
@@ -54,8 +54,12 @@ namespace dae {
 		m_pCamera->Update(pTimer);
 
 		
-		const Matrix worldViewProjectionMatrix = m_pCamera->GetViewMatrix() * m_pCamera->GetProjectionMatrix();
-		m_pMesh->Update(pTimer,&worldViewProjectionMatrix);
+		Matrix worldViewProjectionMatrix = m_pCamera->GetViewMatrix() * m_pCamera->GetProjectionMatrix();
+		Matrix viewInverseMatrix = m_pCamera->GetViewInverseMatrix();
+		Vector3 cameraPosition = m_pCamera->GetPosition();
+
+		
+		m_pMesh->Update(pTimer,&worldViewProjectionMatrix, &viewInverseMatrix, &cameraPosition);
 	}
 
 
