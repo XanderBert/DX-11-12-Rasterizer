@@ -8,7 +8,8 @@ enum class TextureType : uint8_t
     Diffuse,
     Normal,
     Specular,
-    Glossiness
+    Glossiness,
+    PartialCoverage
 };
 
 class TextureEffect : public PosCol3DEffect
@@ -35,6 +36,7 @@ protected:
     ID3DX11EffectShaderResourceVariable* m_pNormalMapVariable{ nullptr };
     ID3DX11EffectShaderResourceVariable* m_pSpecularMapVariable{ nullptr };
     ID3DX11EffectShaderResourceVariable* m_pGlossinessVariable{ nullptr };
+    ID3DX11EffectShaderResourceVariable* m_pPartialCoverageMapVariable{ nullptr };
     
     ID3DX11EffectMatrixVariable* m_pViewInverseMatrixVariable{ nullptr };
     ID3DX11EffectMatrixVariable* m_pWorldMatrixVariable{ nullptr };

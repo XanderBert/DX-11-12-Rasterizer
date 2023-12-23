@@ -11,7 +11,8 @@ public:
     IEffect& operator=(const IEffect&) = delete;
     IEffect& operator=(IEffect&&) noexcept = delete;
 
-
+    bool SetTechnique(const LPCSTR& techniqueName);
+    
     ID3DX11Effect* GetEffect() const { return m_pEffect; }
     ID3DX11EffectTechnique* GetTechnique() const { return m_pTechnique; }
 

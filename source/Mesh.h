@@ -32,6 +32,7 @@ public:
     //TODO: Should be checked if it really behaves properly
     void IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
     void SetTextureMap(const std::string& assetLocation, ID3D11Device* pDevice, TextureType type);
+    void SetupPartialCoverageEffect(ID3D11Device* pDevice);
 
 private:
     //Takes a pointer to a pointer to a texture
@@ -39,13 +40,19 @@ private:
     std::map<TextureType, Texture*> m_TextureMap;
 
     
-    ID3D11Buffer* m_pVertexBuffer{ nullptr };
     ID3D11InputLayout* m_pInputLayout{ nullptr };
+    ID3D11Buffer* m_pVertexBuffer{ nullptr };
     ID3D11Buffer* m_pIndexBuffer{ nullptr };
+    uint32_t m_NumIndices{ 0 };
+
+    ID3D11Buffer* m_pFireVertexBuffer{ nullptr };
+    ID3D11Buffer* m_pFireIndexBuffer{ nullptr };
+    uint32_t m_FireNumIndices{ 0 };
     
     TextureEffect* m_pEffect{ nullptr };
-    uint32_t m_NumIndices{ 0 };
     D3D11_FILTER m_SamplerFilter{ D3D11_FILTER_MIN_MAG_MIP_LINEAR };
 
     dae::Matrix m_WorldMatrix{dae::Matrix::Identity()};
+
+
 };

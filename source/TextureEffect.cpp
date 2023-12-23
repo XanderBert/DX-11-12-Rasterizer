@@ -18,7 +18,9 @@ TextureEffect::TextureEffect(ID3D11Device* pDevice, const std::wstring& assetFil
     //Glossiness map
     m_pGlossinessVariable = m_pEffect->GetVariableByName("gGlossinessMap")->AsShaderResource();
     assert(m_pGlossinessVariable->IsValid() && "TextureEffect::TextureEffect() -> GetVariableByName() not valid!");
-    
+
+    m_pPartialCoverageMapVariable = m_pEffect->GetVariableByName("gFireEffectMap")->AsShaderResource();
+    assert(m_pPartialCoverageMapVariable->IsValid() && "TextureEffect::TextureEffect() -> GetVariableByName() not valid!");
 
     // m_pViewInverseMatrixVariable = m_pEffect->GetVariableByName("gViewInverseMatrix")->AsMatrix();
     // assert(m_pViewInverseMatrixVariable->IsValid() && "Effect::Effect() -> gViewInverseMatrix variable not valid!");
@@ -50,6 +52,9 @@ void TextureEffect::SetTextureMap(TextureType type, ID3D11ShaderResourceView* pR
             break;
         case TextureType::Glossiness:
             m_pGlossinessVariable->SetResource(pResourceView);
+            break;
+        case TextureType::PartialCoverage:
+            m_pPartialCoverageMapVariable->SetResource(pResourceView);
             break;
         }
     }

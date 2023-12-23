@@ -6,12 +6,19 @@ IEffect::IEffect(ID3D11Device* pDevice, const std::wstring& assetFile, const LPC
 {
     assert(m_pEffect->IsValid() && "Effect::Effect() -> Effect not valid!");
 
-    m_pTechnique = m_pEffect->GetTechniqueByName(techniqueName);
-    assert(m_pTechnique->IsValid() && "Effect::Effect() -> Technique not valid!");
+    SetTechnique(techniqueName);    
 }
 IEffect::~IEffect()
 {
-    if (m_pEffect)    m_pEffect->Release();
+    SafeRelease(m_pEffect)
+}
+
+bool IEffect::SetTechnique(const LPCSTR& techniqueName)
+{
+    m_pTechnique = m_pEffect->GetTechniqueByName(techniqueName);
+    assert(m_pTechnique->IsValid() && "Effect::Effect() -> Technique not valid!");
+
+    return m_pTechnique->IsValid();
 }
 
 ID3DX11Effect* IEffect::LoadEffect(ID3D11Device* pDevice, const std::wstring& assetFile)
@@ -35,27 +42,26 @@ ID3DX11Effect* IEffect::LoadEffect(ID3D11Device* pDevice, const std::wstring& as
         &pEffect,
         &pErrorBlob);
 
+    
+    if (pErrorBlob)
+    {
+        const char* pError = static_cast<const char*>(pErrorBlob->GetBufferPointer());
+        std::wstringstream ss{};
+
+        for (size_t i = 0; i < pErrorBlob->GetBufferSize(); ++i) ss << pError[i];
+
+
+        OutputDebugStringW(ss.str().c_str());
+        SafeRelease(pErrorBlob);
+
+        std::wcout << ss.str() << '\n';
+    }
+
     if (FAILED(result))
     {
-        std::wstringstream ss;
-
-        if (pErrorBlob)
-        {
-            const char* pError = static_cast<const char*>(pErrorBlob->GetBufferPointer());
-
-            for (size_t i = 0; i < pErrorBlob->GetBufferSize(); ++i) ss << pError[i];
-
-
-            OutputDebugStringW(ss.str().c_str());
-            pErrorBlob->Release();
-            pErrorBlob = nullptr;
-
-            std::wcout << ss.str() << std::endl;
-            return nullptr;
-        }
-
+        std::wstringstream ss{};
         ss << "EffectLoader: Failed to load effect!\nPath: " << assetFile;
-        std::wcout << ss.str() << std::endl;
+        std::wcout << ss.str() << '\n';
         return nullptr;
     }
 

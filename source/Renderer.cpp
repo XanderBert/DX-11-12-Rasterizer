@@ -34,19 +34,20 @@ namespace dae {
 
 	Renderer::~Renderer()
 	{
-		if (m_pRenderTargetView) m_pRenderTargetView->Release();
-		if (m_pRenderTargetBuffer) m_pRenderTargetBuffer->Release();
-		if (m_pDepthStencilView) m_pDepthStencilView->Release();
-		if (m_pDepthStencilBuffer) m_pDepthStencilBuffer->Release();
-		if (m_pSwapChain) m_pSwapChain->Release();
+		SafeRelease(m_pRenderTargetView)
+		SafeRelease(m_pRenderTargetBuffer)
+		SafeRelease(m_pDepthStencilView)
+		SafeRelease(m_pDepthStencilBuffer)
+		SafeRelease(m_pSwapChain)
+
 		if (m_pDeviceContext)
 		{
 			m_pDeviceContext->ClearState();
 			m_pDeviceContext->Flush();
-			m_pDeviceContext->Release();
+			SafeRelease(m_pDeviceContext)
 		}
-		if (m_pDevice) m_pDevice->Release();
-		
+
+		SafeRelease(m_pDevice)
 	}
 
 	void Renderer::Update(const Timer* pTimer)
@@ -101,6 +102,7 @@ namespace dae {
 		m_pMesh->SetTextureMap("Resources/vehicle_normal.png", m_pDevice, TextureType::Normal);
 		m_pMesh->SetTextureMap("Resources/vehicle_specular.png", m_pDevice, TextureType::Specular);
 		m_pMesh->SetTextureMap("Resources/vehicle_gloss.png", m_pDevice, TextureType::Glossiness);
+		m_pMesh->SetTextureMap("Resources/fireFX_diffuse.png", m_pDevice, TextureType::PartialCoverage);
 	}
 
 	HRESULT Renderer::InitializeDirectX()
@@ -175,8 +177,8 @@ namespace dae {
 		);
 		if(FAILED(result)) return result;
 
-		pFactory->Release();
-		pFactory2->Release();
+		SafeRelease(pFactory)
+		SafeRelease(pFactory2)
 		
 
 		//

@@ -14,8 +14,8 @@ Texture::Texture(const std::string& filename, ID3D11Device* pDevice)
 
 Texture::~Texture()
 {
-    if(m_pResource) m_pResource->Release();
-    if(m_pTextureView) m_pTextureView->Release();
+    SafeRelease(m_pResource)
+    SafeRelease(m_pTextureView)
 }
 
 ID3D11Texture2D* Texture::Load(const std::string& filename, ID3D11Device* pDevice)

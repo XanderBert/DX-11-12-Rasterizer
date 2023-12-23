@@ -81,6 +81,7 @@ int main(int argc, char* args[])
 	pTimer->Stop();
 
 	//Shutdown "framework"
+
 	delete pRenderer;
 	delete pTimer;
 

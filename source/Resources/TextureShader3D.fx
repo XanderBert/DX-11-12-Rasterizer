@@ -26,6 +26,32 @@ uniform extern Texture2D gDiffuseMap : DiffuseMap;
 uniform extern Texture2D gNormalMap : NormalMap;
 uniform extern Texture2D gSpecularMap : SpecularMap;
 uniform extern Texture2D gGlossinessMap : GlossinessMap;
+uniform extern Texture2D gFireEffectMap : FireEffectMap;
+
+
+RasterizerState gNoCulling
+{
+	CullMode = none;
+	FrontCounterClockwise = false;
+};
+
+RasterizerState gCulling
+{
+	CullMode = back;
+	FrontCounterClockwise = false;
+};
+
+BlendState gBlendState
+{
+	BlendEnable[0] = true;
+	SrcBlend = src_alpha;
+	DestBlend = inv_src_alpha;
+	BlendOp = add;
+	SrcBlendAlpha = zero;
+	DestBlendAlpha = zero;
+	BlendOpAlpha = add;
+	RenderTargetWriteMask[0] = 0x0F;
+};
 
 
 SamplerState gSampler : register(s0)
@@ -36,6 +62,34 @@ SamplerState gSampler : register(s0)
 	AddressW = WRAP;
 };
 
+DepthStencilState gNoDepthStencil
+{
+    DepthEnable = true;
+    DepthWriteMask = zero;
+    DepthFunc = less;
+    StencilEnable = false;
+};
+
+DepthStencilState gDepthStencil
+{
+	DepthEnable = true;
+    DepthWriteMask = all;
+    DepthFunc = less;
+
+    StencilEnable = false;
+    StencilReadMask = 0xFF;
+    StencilWriteMask = 0xFF;
+
+    FrontFaceStencilFunc = always;
+    BackFaceStencilFail = keep;
+    FrontFaceStencilDepthFail = keep;
+    FrontFaceStencilPass = keep;
+
+    BackFaceStencilFunc = always;
+    BackFaceStencilFail = keep;
+    BackFaceStencilDepthFail = keep;
+    BackFaceStencilPass = keep;
+};
 
 struct VertexShaderInput
 {
@@ -96,11 +150,11 @@ float3 CalculateSpecular(float3 viewDirection, float3 normal, float2 texCoord)
 	//Tone Down on the refelctions with the power of the glossiness map
 	float specularExp = gShininess * gGlossinessMap.Sample(gSampler, texCoord).r;
 
-  	float specularPower = pow(specularValue, specularExp);
+  	float specularPower = pow(specularValue, specularExp).r;
 	
 	if(gUseTextureSpecularIntensity)
 	{
-		float3 specTexture = gSpecularMap.Sample(gSampler, texCoord);
+		float3 specTexture = gSpecularMap.Sample(gSampler, texCoord).rgb;
 		
 		//Return the Specular
 		return normalize(gColorSpecular) * specularPower * specTexture;
@@ -116,7 +170,7 @@ float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
 		
 	if(gUseTextureNormal)
 	{
-		float3 normalMap = gNormalMap.Sample(gSampler, texCoord);
+		float3 normalMap = gNormalMap.Sample(gSampler, texCoord).rgb;
 	
 		newNormal.x = 2 * normalMap.x - 1;
 		newNormal.y = 2 * normalMap.y - 1;
@@ -163,7 +217,7 @@ float3 CalculateCookTorrance(float3 normal, float3 viewDir, float3 lightDir, flo
 float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection)
 {
 	//Get the diffuse color from the diffuse map
-	float3 diffColor = gDiffuseMap.Sample(gSampler, texCoord);
+	float3 diffColor = gDiffuseMap.Sample(gSampler, texCoord).rgb;
 	
 
 	
@@ -226,7 +280,7 @@ VertexShaderOutput VS(VertexShaderInput input)
 
 void CalculateViewDirection(float3 worldPos, out float3 viewDirection)
 {
-	float invViewDirection = normalize(gCameraPosition - worldPos);
+	float3 invViewDirection = normalize(gCameraPosition - worldPos);
 	viewDirection = -invViewDirection;
 }
 
@@ -257,11 +311,28 @@ float4 PS(VertexShaderOutput pixelShaderInput) : SV_TARGET
 
 	//FINAL COLOR
 	float3 finalColor = diffColor + specColor;
+	
+	//add more contrast
+	finalColor = pow(abs(finalColor), 1.8f);
+
 
 	return float4(finalColor, 1.f);
 }
 
 
+//------------------------------------------------
+// Flat Pixel Shader
+//------------------------------------------------
+float4 PSFlat(VertexShaderOutput pixelShaderInput) : SV_TARGET
+{
+	//Just sample the texture and return it
+	float4 finalColor =  gFireEffectMap.Sample(gSampler, pixelShaderInput.TexCoord);
+
+	//add more contrast
+	finalColor = pow(abs(finalColor), 1.8f);
+
+	return float4(finalColor);
+}
 
 //------------------------------------------------a
 // Technique
@@ -270,8 +341,26 @@ technique11 DefaultTechnique
 {
 	pass P0
 	{
+		SetRasterizerState(gCulling);
+		SetDepthStencilState(gDepthStencil, 0);
+
 		SetVertexShader(CompileShader(vs_5_0, VS()));
 		SetGeometryShader(NULL);
 		SetPixelShader(CompileShader(ps_5_0, PS()));
+	}
+}
+
+technique11 FlatPartialCoverageTechnique
+{
+	pass P0
+	{
+		SetRasterizerState(gNoCulling);
+		SetDepthStencilState(gNoDepthStencil, 0);
+		SetBlendState(gBlendState, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
+
+
+		SetVertexShader(CompileShader(vs_5_0, VS()));
+		SetGeometryShader(NULL);
+		SetPixelShader(CompileShader(ps_5_0, PSFlat()));
 	}
 }

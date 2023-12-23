@@ -5,6 +5,7 @@
 
 #include "PosCol3DEffect.h"
 #include "Texture.h"
+#include "Utils.h"
 
 Mesh::Mesh(ID3D11Device* pDevice, const std::vector<Vertex>& vertices,const  std::vector<uint32_t>& indices)
     : m_NumIndices(static_cast<uint32_t>(indices.size()))
@@ -16,10 +17,13 @@ Mesh::Mesh(ID3D11Device* pDevice, const std::vector<Vertex>& vertices,const  std
     m_TextureMap[TextureType::Normal] = { nullptr };
     m_TextureMap[TextureType::Specular] = { nullptr };
     m_TextureMap[TextureType::Glossiness] = { nullptr };
+    m_TextureMap[TextureType::PartialCoverage] = { nullptr };
     
     //There could be 1 instance of the effect class, that will be used over multiple meshes.
     m_pEffect = new TextureEffect(pDevice, L"Resources/TextureShader3D.fx", "DefaultTechnique");
     assert(m_pEffect != nullptr && "Mesh::Mesh() -> Failed to create effect!");
+
+    
     
     // • Create the vertex layout using, again, a matching descriptor.
     static constexpr uint32_t numElements{ 4 };
@@ -82,20 +86,23 @@ Mesh::Mesh(ID3D11Device* pDevice, const std::vector<Vertex>& vertices,const  std
     subresourceData.pSysMem = indices.data();
     hr = pDevice->CreateBuffer(&bufferDescription, &subresourceData, &m_pIndexBuffer);
     assert(SUCCEEDED(hr) && "Mesh::Mesh() -> Failed to create index buffer!");
+
+
+    SetupPartialCoverageEffect(pDevice);
 }
 
 Mesh::~Mesh()
 {
-    if (m_pVertexBuffer) m_pVertexBuffer->Release();
-    if (m_pInputLayout) m_pInputLayout->Release();
-    if (m_pIndexBuffer) m_pIndexBuffer->Release();
-    delete m_pEffect;
+    SafeRelease(m_pVertexBuffer)
+    SafeRelease(m_pInputLayout)
+    SafeRelease(m_pIndexBuffer)
+    SafeDelete(m_pEffect)
 
     //Delete the textures
     //TODO the mesh does take ownership  of the textures, This makes texture instancing impossible
-    for(const auto& texture : m_TextureMap | std::views::values)
+    for(const Texture* texture : m_TextureMap | std::views::values)
     {
-        delete texture;
+        SafeDelete(texture)
     }
 
     m_TextureMap.clear();
@@ -105,6 +112,10 @@ Mesh::~Mesh()
 
 void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
 {
+    
+    //Reset the technique
+    m_pEffect->SetTechnique("DefaultTechnique");
+    
     //------------------------
     // Set primitive topology
     //------------------------
@@ -138,6 +149,31 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
         m_pEffect->GetTechnique()->GetPassByIndex(p)->Apply(0, pDeviceContext);
         pDeviceContext->DrawIndexed(m_NumIndices, 0, 0);
     }
+
+    //Update the Technique
+    m_pEffect->SetTechnique("FlatPartialCoverageTechnique");
+
+    //------------------------
+    // Set vertex buffer
+    //------------------------
+    pDeviceContext->IASetVertexBuffers(0, 1, &m_pFireVertexBuffer, &stride, &offset);
+
+    //------------------------
+    // Set index buffer
+    //------------------------
+    pDeviceContext->IASetIndexBuffer(m_pFireIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+    //------------------------
+    // Draw
+    //------------------------
+    //TODO: Update the technique
+    m_pEffect->GetTechnique()->GetDesc(&techDesc);
+    for (UINT p = 0; p < techDesc.Passes; ++p)
+    {
+        m_pEffect->GetTechnique()->GetPassByIndex(p)->Apply(0, pDeviceContext);
+        pDeviceContext->DrawIndexed(m_FireNumIndices, 0, 0);
+    }
+
 }
 
 void Mesh::Update(const dae::Timer* pTimer, dae::Matrix* worldViewProjectionMatrix, dae::Matrix* viewInverseMatrix, dae::Vector3* cameraPosition)
@@ -173,7 +209,42 @@ void Mesh::SetTextureMap(const std::string& assetLocation, ID3D11Device* pDevice
     m_pEffect->SetTextureMap(type, pTexture->GetTextureView());
 }
 
-//TODO: Clean this up
+void Mesh::SetupPartialCoverageEffect(ID3D11Device* pDevice)
+{
+    
+    std::vector<Vertex> fireVertices{};
+    std::vector<uint32_t> fireIndices{};
+
+    //Load the fire mesh
+    dae::Utils::ParseOBJ("Resources/fireFX.obj", fireVertices, fireIndices, false);
+    
+    // Vertex Buffer
+    D3D11_BUFFER_DESC bufferDescription{};
+    bufferDescription.Usage = D3D11_USAGE_IMMUTABLE;
+    bufferDescription.ByteWidth = sizeof(Vertex) * static_cast<uint32_t>(fireVertices.size());
+    bufferDescription.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bufferDescription.CPUAccessFlags = 0;
+    bufferDescription.MiscFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA subresourceData{};
+    subresourceData.pSysMem = fireVertices.data();
+
+    HRESULT hr = pDevice->CreateBuffer(&bufferDescription, &subresourceData, &m_pFireVertexBuffer);
+    assert(SUCCEEDED(hr) && "Mesh::Mesh() -> Failed to create Fire vertex buffer!");
+
+    // Index Buffer
+    m_FireNumIndices = static_cast<uint32_t>(fireVertices.size());
+    bufferDescription.Usage = D3D11_USAGE_IMMUTABLE;
+    bufferDescription.ByteWidth = sizeof(uint32_t) * m_FireNumIndices;
+    bufferDescription.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    bufferDescription.CPUAccessFlags = 0;
+    bufferDescription.MiscFlags = 0;
+    subresourceData.pSysMem = fireIndices.data();
+    hr = pDevice->CreateBuffer(&bufferDescription, &subresourceData, &m_pFireIndexBuffer);
+    assert(SUCCEEDED(hr) && "Mesh::Mesh() -> Failed to create Fire index buffer!");
+}
+
+//TODO: Clean + fix this up
 void Mesh::IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 {
     assert(pDevice != nullptr && "Mesh::IncrementFilter() -> pDevice is nullptr!");
