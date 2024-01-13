@@ -6,6 +6,7 @@
 
 #undef main
 #include "Renderer.h"
+#include "Renderer12.h"
 
 using namespace dae;
 
@@ -38,7 +39,8 @@ int main(int argc, char* args[])
 
 	//Initialize "framework"
 	const auto pTimer = new Timer();
-	const auto pRenderer = new Renderer(pWindow);
+	//const auto pRenderer = new Renderer(pWindow);
+	const auto pRendererDX12 = new Renderer12(pWindow);
 
 	//Start loop
 	pTimer->Start();
@@ -57,17 +59,17 @@ int main(int argc, char* args[])
 				break;
 			case SDL_KEYUP:
 				//Test for a key
-				if (e.key.keysym.scancode == SDL_SCANCODE_1) pRenderer->IncrementFilter();
+				//if (e.key.keysym.scancode == SDL_SCANCODE_1) pRenderer->IncrementFilter();
 				break;
 			default: ;
 			}
 		}
 
 		//--------- Update ---------
-		pRenderer->Update(pTimer);
+		pRendererDX12->Update(pTimer);
 
 		//--------- Render ---------
-		pRenderer->Render();
+		pRendererDX12->Render();
 
 		//--------- Timer ---------
 		pTimer->Update();
@@ -82,7 +84,8 @@ int main(int argc, char* args[])
 
 	//Shutdown "framework"
 
-	delete pRenderer;
+	//delete pRenderer;
+	delete pRendererDX12;
 	delete pTimer;
 
 	ShutDown(pWindow);

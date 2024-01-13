@@ -26,7 +26,6 @@ namespace dae
 
 	private:
 		SDL_Window* m_pWindow{};
-
 		int m_Width{};
 		int m_Height{};
 

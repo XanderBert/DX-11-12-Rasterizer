@@ -68,11 +68,16 @@ namespace dae {
 	{
 		assert(m_IsInitialized == true && "DirectX is not initialized!");
 		if (!m_IsInitialized) return;
+
+
 		
 		//Clear the RenderTargetView and the DepthStencilView
 		constexpr ColorRGB clearColor = ColorRGB{ 0.39f, 0.59f, 0.93f };
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, &clearColor.r);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+
+
+
 
 		assert(m_pMesh != nullptr && "Mesh is not initialized!");
 		m_pMesh->Render(m_pDeviceContext);
