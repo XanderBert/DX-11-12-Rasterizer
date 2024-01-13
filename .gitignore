@@ -1,3 +1,5 @@
 bin/
 TempFiles/
 .vs/
+.idea/
+todo's.md
