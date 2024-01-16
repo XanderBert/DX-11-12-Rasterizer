@@ -1,11 +1,14 @@
 #include "pch.h"
 
+#define USE_DIRECTX12 0
+
 #if defined(_DEBUG)
 #include "vld.h"
 #endif
 
 #undef main
 #include "Renderer.h"
+#include "Renderer12.h"
 
 using namespace dae;
 
@@ -38,7 +41,14 @@ int main(int argc, char* args[])
 
 	//Initialize "framework"
 	const auto pTimer = new Timer();
-	const auto pRenderer = new Renderer(pWindow);
+
+	IRenderer* pRenderer = nullptr;
+
+#if USE_DIRECTX12
+	 pRenderer = new Renderer12(pWindow);
+#else
+	pRenderer = new Renderer(pWindow);
+#endif
 
 	//Start loop
 	pTimer->Start();
@@ -81,7 +91,6 @@ int main(int argc, char* args[])
 	pTimer->Stop();
 
 	//Shutdown "framework"
-
 	delete pRenderer;
 	delete pTimer;
 
