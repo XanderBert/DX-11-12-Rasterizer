@@ -40,6 +40,9 @@
 #include "Macros.h"
 
 
+//Texures
+typedef ID3D11Texture2D Texture2D;
+
 
 //Hr result macro
 #define ReturnOnFail(hr) if(FAILED(hr)) return hr;

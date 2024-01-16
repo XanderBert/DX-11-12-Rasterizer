@@ -3,7 +3,7 @@
 
 Texture::Texture(const std::string& filename, ID3D11Device* pDevice)
 {
-    ID3D11Texture2D* pTexture = Load(filename, pDevice);
+    Texture2D* pTexture = Load(filename, pDevice);
 
     if(pTexture == nullptr)
     {
@@ -18,7 +18,7 @@ Texture::~Texture()
     SafeRelease(m_pTextureView)
 }
 
-ID3D11Texture2D* Texture::Load(const std::string& filename, ID3D11Device* pDevice)
+Texture2D* Texture::Load(const std::string& filename, ID3D11Device* pDevice)
 {
     //Load the image
     SDL_Surface* pSurface{ IMG_Load(filename.c_str())};

@@ -13,12 +13,12 @@ public:
     Texture& operator=(Texture&& other) noexcept = delete;
 
 
-    ID3D11Texture2D* GetTexture() const { return m_pResource; }
+    Texture2D* GetTexture() const { return m_pResource; }
     ID3D11ShaderResourceView* GetTextureView() const { return m_pTextureView; }
     
 private:
-    ID3D11Texture2D* Load(const std::string& filename, ID3D11Device* pDevice);
+    Texture2D* Load(const std::string& filename, ID3D11Device* pDevice);
     
-    ID3D11Texture2D* m_pResource{ nullptr };
+    Texture2D* m_pResource{ nullptr };
     ID3D11ShaderResourceView* m_pTextureView{ nullptr };
 };

@@ -9,15 +9,9 @@
 
 namespace dae {
 
-	Renderer::Renderer(SDL_Window* pWindow) :
-		m_pWindow(pWindow)
+	Renderer::Renderer(SDL_Window* pWindow) : IRenderer(pWindow)
 	{
-		//Initialize
-		SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
-		
-		const Vector3 origin{ 0.f, 0.f, -50.f };
-		m_pCamera = std::make_unique<Camera>(origin, 45.f, (static_cast<float>(m_Width) / static_cast<float>(m_Height)));
-		
+
 		//Initialize DirectX pipeline
 		if (InitializeDirectX() == S_OK)
 		{
@@ -64,7 +58,7 @@ namespace dae {
 	}
 
 
-	void Renderer::Render() const
+	void Renderer::Render()
 	{
 		assert(m_IsInitialized == true && "DirectX is not initialized!");
 		if (!m_IsInitialized) return;

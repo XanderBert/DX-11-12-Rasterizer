@@ -4,24 +4,8 @@
 
 using Microsoft::WRL::ComPtr;
 
-
-
-
-
-dae::Renderer12::Renderer12(SDL_Window* pWindow)
-    : m_pWindow(pWindow)
+dae::Renderer12::Renderer12(SDL_Window* pWindow) :IRenderer(pWindow)
 {
-    //Initialize
-    int width{};
-    int height{};
-    SDL_GetWindowSize(pWindow, &width, &height);
-
-    m_Width = static_cast<UINT>(width);
-    m_Height = static_cast<UINT>(height);
-
-    const Vector3 origin{ 0.f, 0.f, -50.f };
-    m_pCamera = std::make_unique<Camera>(origin, 45.f, (static_cast<float>(m_Width) / static_cast<float>(m_Height)));
-		
     //Initialize DirectX pipeline
     if (InitializeDirectX() == S_OK)
     {
@@ -32,10 +16,6 @@ dae::Renderer12::Renderer12(SDL_Window* pWindow)
     {
         std::cout << "DirectX initialization failed!\n";
     }
-}
-
-dae::Renderer12::~Renderer12()
-{
 }
 
 void dae::Renderer12::Update(const Timer* /*pTimer*/)
@@ -123,22 +103,18 @@ void dae::Renderer12::Render()
 
 
     //wait for the command list to become free
-    //TODO: this is not ideal, but we need to wait for the frame to be completed before continuing
+    //TODO: this is not ideal, right now we wait for the frame to be completed before continuing
     hr  = m_pFence->SetEventOnCompletion(m_FenceValue - 1, m_FenceEvent);
     ReturnAndAssertOnFail(hr)
     if(WaitForSingleObject(m_FenceEvent, INFINITE) == WAIT_FAILED)
     {
         assert(false && "WaitForSingleObject failed!");
     }
-
-
-    
 }
 
 void dae::Renderer12::IncrementFilter() const
 {
 }
-
 
 HRESULT dae::Renderer12::InitializeDirectX()
 {
@@ -178,8 +154,8 @@ HRESULT dae::Renderer12::InitializeDirectX()
         //Create Swapchain Descriptor
         const DXGI_SWAP_CHAIN_DESC1 swapChainDesc =
         {
-            .Width = m_Width,
-            .Height = m_Height,
+            .Width = static_cast<UINT>(m_Width),
+            .Height = static_cast<UINT>(m_Height),
             .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
             .Stereo = FALSE,
             .SampleDesc = {.Count = 1, .Quality = 0},

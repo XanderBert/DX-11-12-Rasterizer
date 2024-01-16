@@ -104,6 +104,7 @@ xcopy "$(ProjectDir)Resources\" "$(OutDir)Resources\" /y /D</Command>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ColorRGB.h" />
     <ClInclude Include="IEffect.h" />
+    <ClInclude Include="IRenderer.h" />
     <ClInclude Include="Macros.h" />
     <ClInclude Include="MathHelpers.h" />
     <ClInclude Include="Matrix.h" />

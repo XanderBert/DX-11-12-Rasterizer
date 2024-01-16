@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#define USE_DIRECTX12 0
+
 #if defined(_DEBUG)
 #include "vld.h"
 #endif
@@ -39,8 +41,14 @@ int main(int argc, char* args[])
 
 	//Initialize "framework"
 	const auto pTimer = new Timer();
-	//const auto pRenderer = new Renderer(pWindow);
-	const auto pRendererDX12 = new Renderer12(pWindow);
+
+	IRenderer* pRenderer = nullptr;
+
+#if USE_DIRECTX12
+	 pRenderer = new Renderer12(pWindow);
+#else
+	pRenderer = new Renderer(pWindow);
+#endif
 
 	//Start loop
 	pTimer->Start();
@@ -59,17 +67,17 @@ int main(int argc, char* args[])
 				break;
 			case SDL_KEYUP:
 				//Test for a key
-				//if (e.key.keysym.scancode == SDL_SCANCODE_1) pRenderer->IncrementFilter();
+				if (e.key.keysym.scancode == SDL_SCANCODE_1) pRenderer->IncrementFilter();
 				break;
 			default: ;
 			}
 		}
 
 		//--------- Update ---------
-		pRendererDX12->Update(pTimer);
+		pRenderer->Update(pTimer);
 
 		//--------- Render ---------
-		pRendererDX12->Render();
+		pRenderer->Render();
 
 		//--------- Timer ---------
 		pTimer->Update();
@@ -83,9 +91,7 @@ int main(int argc, char* args[])
 	pTimer->Stop();
 
 	//Shutdown "framework"
-
-	//delete pRenderer;
-	delete pRendererDX12;
+	delete pRenderer;
 	delete pTimer;
 
 	ShutDown(pWindow);
