@@ -25,6 +25,7 @@ namespace dae
 
         virtual void IncrementFilter() const = 0;    
         virtual void Update(const Timer* pTimer) = 0;
+        virtual void OnImGuiRender() = 0;
         virtual void Render() = 0;
         
     protected:

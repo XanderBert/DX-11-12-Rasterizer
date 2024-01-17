@@ -22,6 +22,13 @@ void dae::Renderer12::Update(const Timer* /*pTimer*/)
 {
 }
 
+void dae::Renderer12::OnImGuiRender()
+{
+#ifndef IMGUI_DISABLE
+    
+#endif
+}
+
 void dae::Renderer12::Render()
 {
     assert(m_IsInitialized && "DirectX is not initialized!");

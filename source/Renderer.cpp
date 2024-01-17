@@ -65,6 +65,39 @@ namespace dae {
 		m_pMesh->Update(pTimer,&worldViewProjectionMatrix, &viewInverseMatrix, &cameraPosition);
 	}
 
+	void Renderer::OnImGuiRender()
+	{
+#ifndef IMGUI_DISABLE
+
+		if(ImGui::Button("Increment Filter"))
+		{
+			IncrementFilter();	
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("Current Filter: ");
+		ImGui::SameLine();
+		ImGui::Text(m_pMesh->GetEffect()->GetCurrentSamplerType().c_str());
+		ImGui::NewLine();
+		ImGui::Text("Use Normal: ");
+		ImGui::SameLine();
+		
+		if(ImGui::Button("Toggle Normal Map"))
+		{
+			m_pMesh->GetEffect()->ToggleNormalMap();
+		}
+
+		// if(ImGui::Checkbox("##UseNormal", &m_pMesh->GetEffect()->IsNormalMapEnabled()))
+		// {
+		// 	m_pMesh->GetEffect()->ToggleNormalMap();
+		// }
+
+		//std::cout << m_pMesh->GetEffect()->IsNormalMapEnabled() << '\n';
+
+		
+#endif
+	}
+
 
 	void Renderer::Render()
 	{
@@ -98,7 +131,6 @@ namespace dae {
 	void Renderer::IncrementFilter() const
 	{
 		m_pMesh->GetEffect()->IncrementFilter(m_pDevice, m_pDeviceContext);
-		//->IncrementFilter(m_pDevice, m_pDeviceContext);
 	}
 
 	void Renderer::InitializeMesh()

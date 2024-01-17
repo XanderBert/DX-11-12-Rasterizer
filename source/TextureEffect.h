@@ -40,6 +40,21 @@ public:
         return samplerTypes[currentSamplerType];
     }
 
+    static std::string GetCurrentSamplerType()
+    {
+        switch (currentSamplerType)
+        {
+        case SamplerType::Point:
+            return "Point";
+        case SamplerType::Linear:
+            return "Linear";
+        case SamplerType::Anisotropic:
+            return "Anisotropic";
+        default:
+            return "Unknown";
+        }
+    }
+
 private:
     inline static std::map<SamplerType, D3D11_FILTER> samplerTypes =
         {
@@ -69,7 +84,10 @@ public:
     void SetCameraPosition(const dae::Vector3* cameraPosition) const;
 
     void IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
-    
+    static std::string GetCurrentSamplerType();
+
+    void ToggleNormalMap();
+    bool& IsNormalMapEnabled();
 protected:
     //TODO: There should be a way to just add and remove textures instead of having a fixed set of textures
     //This means i should get rid of the static enum class TextureType and find a dynamic way to bind types with textures 
@@ -84,5 +102,9 @@ protected:
 
     //Sampler state:
     ID3DX11EffectSamplerVariable* m_pSamplerVariable{ nullptr };
-   
+
+    //Normal map bool
+    ID3DX11EffectScalarVariable* m_pNormalMapEnabledVariable{ nullptr };
+
+   bool m_IsNormalMapEnabled{ true };
 };

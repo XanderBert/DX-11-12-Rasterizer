@@ -11,6 +11,7 @@ namespace dae
 		virtual ~Renderer() override;
 				
 		virtual void Update(const Timer* pTimer) override;
+		virtual void OnImGuiRender() override;
 		virtual void Render() override;
 		
 		virtual void IncrementFilter() const override;

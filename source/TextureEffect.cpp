@@ -31,6 +31,9 @@ TextureEffect::TextureEffect(ID3D11Device* pDevice, const std::wstring& assetFil
     m_pSamplerVariable = m_pEffect->GetVariableByName("gSampler")->AsSampler();
     assert(m_pSamplerVariable->IsValid() && "Effect::Effect() -> gSampler variable not valid!");
 
+    m_pNormalMapEnabledVariable = m_pEffect->GetVariableByName("gUseTextureNormal")->AsScalar();
+    assert(m_pSamplerVariable->IsValid() && "Effect::Effect() -> gUseTextureNormal variable not valid!");
+
     
     //Sampler state
     D3D11_SAMPLER_DESC samplerDesc{};
@@ -122,6 +125,23 @@ void TextureEffect::IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* 
     
     
     m_pSamplerVariable->SetSampler(0, pSamplerState.Get());
+}
+
+std::string TextureEffect::GetCurrentSamplerType()
+{
+    return SamplerManager::GetCurrentSamplerType();
+}
+
+void TextureEffect::ToggleNormalMap()
+{
+    m_IsNormalMapEnabled = !m_IsNormalMapEnabled;
+    m_pNormalMapEnabledVariable->SetBool(m_IsNormalMapEnabled);
+
+}
+
+bool& TextureEffect::IsNormalMapEnabled()
+{
+    return m_IsNormalMapEnabled;
 }
 
 

@@ -4,8 +4,7 @@ const static bool gUseSpecularBlinn = false;
 const static bool gUseTextureSpecularIntensity = true;
 const static float3 gColorSpecular = float3(1,1,1);
 
-const static bool gUseTextureNormal = true;
-const static bool gFlipGreenChannel = true;
+const static bool gFlipGreenChannel = false;
 
 const static bool gUseHalfLambert = true;
 const static bool gUseCookTorrance = false;
@@ -17,6 +16,7 @@ const static float gShininess = 1.25f;
 
 
 //Should be grouped in a constant buffer
+bool gUseTextureNormal = true;
 uniform extern float4x4 gWorldViewProj : WorldViewProjection;
 uniform extern float4x4 gWorldmatrix : WorldMatrix;
 uniform extern float3 gCameraPosition : Camera;
@@ -172,9 +172,13 @@ float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
 	{
 		float3 normalMap = gNormalMap.Sample(gSampler, texCoord).rgb;
 	
-		newNormal.x = 2 * normalMap.x - 1;
-		newNormal.y = 2 * normalMap.y - 1;
-		newNormal.z = 2 * normalMap.z - 1;
+		//newNormal.x = 2 * normalMap.x - 1;
+		//newNormal.y = 2 * normalMap.y - 1;
+		//newNormal.z = 2 * normalMap.z - 1;
+
+		newNormal.x =  normalMap.x ;
+		newNormal.y =  normalMap.y ;
+		newNormal.z =  normalMap.z ;
 		
 		if(gFlipGreenChannel) newNormal.x = -newNormal.x;
 	}
