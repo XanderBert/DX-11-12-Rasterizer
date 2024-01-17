@@ -1,4 +1,8 @@
 #pragma once
+#define USE_DIRECTX12 0
+#define IMGUI_DISABLE  
+
+
 
 #include <iostream>
 #include <vector>
@@ -32,7 +36,6 @@
 #include <wrl.h>
 
 
-
 // Framework Headers
 #include "Timer.h"
 #include "Math.h"
@@ -40,10 +43,13 @@
 #include "Macros.h"
 
 
+//ImGui
+
+#include "imgui.h"
+#include "backends/imgui_impl_sdl2.h"
+#include "backends/imgui_impl_dx11.h"
+
 //Texures
 typedef ID3D11Texture2D Texture2D;
 
 
-//Hr result macro
-#define ReturnOnFail(hr) if(FAILED(hr)) return hr;
-#define ReturnAndAssertOnFail(hr) if(FAILED(hr)) { assert(false && "HRESULT failed!"); return; }

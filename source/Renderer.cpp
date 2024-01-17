@@ -41,6 +41,12 @@ namespace dae {
 			SafeRelease(m_pDeviceContext)
 		}
 
+#ifdef _DEBUG
+		ID3D11Debug *debugDev;
+		m_pDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debugDev));
+		debugDev->ReportLiveDeviceObjects( D3D11_RLDO_DETAIL );
+		SafeRelease(debugDev)
+#endif
 		SafeRelease(m_pDevice)
 	}
 
@@ -77,7 +83,9 @@ namespace dae {
 		m_pMesh->Render(m_pDeviceContext);
 
 
-
+#ifndef IMGUI_DISABLE  
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+#endif
 		//Swap
 		m_pSwapChain->Present(1, 0);
 

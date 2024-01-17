@@ -16,3 +16,9 @@ if(pObject != nullptr)\
 delete pObject;\
 pObject = nullptr;\
 }
+
+
+//Hr result macro
+#define ReturnOnFail(hr) if(FAILED(hr)) return hr;
+#define ReturnAndAssertOnFail(hr) if(FAILED(hr)) { assert(false && "HRESULT failed!"); return; }
+#define AssertOnFail(hr) assert(SUCCEEDED(hr) && "HRESULT failed!");

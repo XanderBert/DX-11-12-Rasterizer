@@ -88,5 +88,5 @@ protected:
 
     //Sampler state:
     ID3DX11EffectSamplerVariable* m_pSamplerVariable{ nullptr };
-    ID3D11SamplerState* m_pSamplerState{ nullptr };
+   
 };

@@ -53,9 +53,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions>_MBCS;_DEBUG%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../include/vld;../include/SDL2-2.28.3;../include/SDL2_image-2.6.3;../include/dx11effects;../include/dx12headers</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include/vld;../include/SDL2-2.28.3;../include/SDL2_image-2.6.3;../include/dx11effects;../include/dx12headers;imgui-1.90.1;imgui-1.90.1/backends</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -81,8 +81,8 @@ xcopy "$(ProjectDir)Resources\" "$(OutDir)Resources\" /y /D</Command>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <AdditionalIncludeDirectories>../include/vld;../include/SDL2-2.28.3;../include/SDL2_image-2.6.3;../include/dx11effects;../include/dx12headers</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AdditionalIncludeDirectories>../include/vld;../include/SDL2-2.28.3;../include/SDL2_image-2.6.3;../include/dx11effects;../include/dx12headers;imgui-1.90.1;imgui-1.90.1/backends</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -104,6 +104,14 @@ xcopy "$(ProjectDir)Resources\" "$(OutDir)Resources\" /y /D</Command>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ColorRGB.h" />
     <ClInclude Include="IEffect.h" />
+    <ClInclude Include="imgui-1.90.1\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="imgui-1.90.1\backends\imgui_impl_sdl2.h" />
+    <ClInclude Include="imgui-1.90.1\imconfig.h" />
+    <ClInclude Include="imgui-1.90.1\imgui.h" />
+    <ClInclude Include="imgui-1.90.1\imgui_internal.h" />
+    <ClInclude Include="imgui-1.90.1\imstb_rectpack.h" />
+    <ClInclude Include="imgui-1.90.1\imstb_textedit.h" />
+    <ClInclude Include="imgui-1.90.1\imstb_truetype.h" />
     <ClInclude Include="IRenderer.h" />
     <ClInclude Include="Macros.h" />
     <ClInclude Include="MathHelpers.h" />
@@ -125,6 +133,13 @@ xcopy "$(ProjectDir)Resources\" "$(OutDir)Resources\" /y /D</Command>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="IEffect.cpp" />
+    <ClCompile Include="imgui-1.90.1\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="imgui-1.90.1\backends\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="imgui-1.90.1\imgui.cpp" />
+    <ClCompile Include="imgui-1.90.1\imgui_demo.cpp" />
+    <ClCompile Include="imgui-1.90.1\imgui_draw.cpp" />
+    <ClCompile Include="imgui-1.90.1\imgui_tables.cpp" />
+    <ClCompile Include="imgui-1.90.1\imgui_widgets.cpp" />
     <ClCompile Include="Matrix.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
@@ -165,6 +180,14 @@ xcopy "$(ProjectDir)Resources\" "$(OutDir)Resources\" /y /D</Command>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="imgui-1.90.1\LICENSE.txt" />
+    <Content Include="imgui-1.90.1\misc\fonts\Cousine-Regular.ttf" />
+    <Content Include="imgui-1.90.1\misc\fonts\DroidSans.ttf" />
+    <Content Include="imgui-1.90.1\misc\fonts\Karla-Regular.ttf" />
+    <Content Include="imgui-1.90.1\misc\fonts\ProggyClean.ttf" />
+    <Content Include="imgui-1.90.1\misc\fonts\ProggyTiny.ttf" />
+    <Content Include="imgui-1.90.1\misc\fonts\Roboto-Medium.ttf" />
+    <Content Include="imgui-1.90.1\misc\README.txt" />
     <Content Include="todo's.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

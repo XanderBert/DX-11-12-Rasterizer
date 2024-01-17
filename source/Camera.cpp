@@ -1,5 +1,8 @@
 ﻿#include "pch.h"
 #include "Camera.h"
+
+#include "imgui_internal.h"
+
 namespace dae
 {
     void Camera::Update(const Timer* pTimer)
@@ -28,20 +31,35 @@ namespace dae
 		direction += pKeyboardState[SDL_SCANCODE_D] * m_Right * keyboardMovementSpeed * deltaTime;
 
 		// Calculate new position and rotation with mouse inputs
-		switch (mouseState)
-		{
-		case SDL_BUTTON_LMASK: // LEFT CLICK
-			direction -= m_Forward * (mouseY * mouseMovementSpeed * deltaTime);
-			m_Yaw += mouseX * angularSpeed * deltaTime;
-			break;
-		case SDL_BUTTON_RMASK: // RIGHT CLICK
-			m_Yaw += mouseX * angularSpeed * deltaTime;
-			m_Pitch -= mouseY * angularSpeed * deltaTime;
-			break;
-		case SDL_BUTTON_X2: // BOTH CLICK
-			direction.y -= mouseY * mouseMovementSpeed * deltaTime;
-			break;
-		}
+
+		//bool isLeftConsumed = ImGui::GetIO().MouseDown[0];
+		//bool isRightConsumed = ImGui::GetIO().MouseDown[1];
+
+		//check if the mouse is inside the imGui window
+		//ImVec2 winPos = ImGui::GetCurrentWindow()->Pos;
+    	//ImVec2 winSize = ImGui::GetCurrentWindow()->Size;
+    	//bool isOverWindow = ImGui::IsMouseHoveringRect(winPos, ImVec2(winPos.x + winSize.x, winPos.y + winSize.y));
+
+#ifndef IMGUI_DISABLE  
+    	if(!ImGui::GetIO().WantCaptureMouse)
+#endif
+    	{
+    		switch (mouseState)
+    		{
+    		case SDL_BUTTON_LMASK: // LEFT CLICK
+    			direction -= m_Forward * (mouseY * mouseMovementSpeed * deltaTime);
+    			m_Yaw += mouseX * angularSpeed * deltaTime;
+    			break;
+    		case SDL_BUTTON_RMASK: // RIGHT CLICK
+    			m_Yaw += mouseX * angularSpeed * deltaTime;
+    			m_Pitch -= mouseY * angularSpeed * deltaTime;
+    			break;
+    		case SDL_BUTTON_X2: // BOTH CLICK
+    			direction.y -= mouseY * mouseMovementSpeed * deltaTime;
+    			break;
+    		}
+    	}
+		
 		m_Pitch = std::clamp(m_Pitch, -89.f * TO_RADIANS, 89.f * TO_RADIANS);
 
 

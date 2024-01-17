@@ -44,20 +44,19 @@ TextureEffect::TextureEffect(ID3D11Device* pDevice, const std::wstring& assetFil
     samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     samplerDesc.MinLOD = 0;
     samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
     
-    HRESULT hr = pDevice->CreateSamplerState(&samplerDesc, &m_pSamplerState);
+    Microsoft::WRL::ComPtr<ID3D11SamplerState> pSamplerState{ nullptr };
+    
+    HRESULT hr = pDevice->CreateSamplerState(&samplerDesc, &pSamplerState);
     assert(SUCCEEDED(hr) && "TextureEffect::TextureEffect() -> CreateSamplerState() failed!");
 
     
-    m_pSamplerVariable->SetSampler(0, m_pSamplerState);
-    m_pSamplerState->Release();
+    m_pSamplerVariable->SetSampler(0, pSamplerState.Get());
 }
 
-TextureEffect::~TextureEffect()
-{
-    if(m_pSamplerState)
-    m_pSamplerState->Release();
-}
+TextureEffect::~TextureEffect() = default;
+
 
 void TextureEffect::SetTextureMap(TextureType type, ID3D11ShaderResourceView* pResourceView) const
 {
@@ -96,27 +95,27 @@ void TextureEffect::SetCameraPosition(const dae::Vector3* cameraPosition) const
     m_pCameraPositionVariable->SetFloatVector(reinterpret_cast<const float*>(cameraPosition));
 }
 
-void TextureEffect::IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
+void TextureEffect::IncrementFilter(ID3D11Device* /*pDevice*/, ID3D11DeviceContext* /*pDeviceContext*/)
 {
-    assert(pDevice != nullptr && "Mesh::IncrementFilter() -> pDevice is nullptr!");
-    assert(pDeviceContext != nullptr && "Mesh::IncrementFilter() -> pDeviceContext is nullptr!");
-    
-    //Sampler state
-    D3D11_SAMPLER_DESC samplerDesc{};
-    samplerDesc.Filter =   SamplerManager::NextSamplerType();
-    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
-    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
-    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
-    samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    samplerDesc.MinLOD = 0;
-    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-    
-    HRESULT hr = pDevice->CreateSamplerState(&samplerDesc, &m_pSamplerState);
-    assert(SUCCEEDED(hr) && "TextureEffect::TextureEffect() -> CreateSamplerState() failed!");
-
-    
-    m_pSamplerVariable->SetSampler(0, m_pSamplerState);
-    m_pSamplerState->Release();
+    // assert(pDevice != nullptr && "Mesh::IncrementFilter() -> pDevice is nullptr!");
+    // assert(pDeviceContext != nullptr && "Mesh::IncrementFilter() -> pDeviceContext is nullptr!");
+    //
+    // //Sampler state
+    // D3D11_SAMPLER_DESC samplerDesc{};
+    // samplerDesc.Filter =   SamplerManager::NextSamplerType();
+    // samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
+    // samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
+    // samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
+    // samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    // samplerDesc.MinLOD = 0;
+    // samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    //
+    // Microsoft::WRL::ComPtr<ID3D11SamplerState> pSamplerState{ nullptr };
+    // HRESULT hr = pDevice->CreateSamplerState(&samplerDesc, &pSamplerState);
+    // assert(SUCCEEDED(hr) && "TextureEffect::TextureEffect() -> CreateSamplerState() failed!");
+    //
+    //
+    // m_pSamplerVariable->SetSampler(0, pSamplerState.Get());
 }
 
 

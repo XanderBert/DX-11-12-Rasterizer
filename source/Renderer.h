@@ -15,6 +15,10 @@ namespace dae
 		
 		virtual void IncrementFilter() const override;
 
+
+		ID3D11Device* GetDevice() const { return m_pDevice; }
+		ID3D11DeviceContext* GetDeviceContext() const { return m_pDeviceContext; }
+		
 	private:
 		virtual HRESULT InitializeDirectX() override;
 		
