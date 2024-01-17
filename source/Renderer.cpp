@@ -42,11 +42,13 @@ namespace dae {
 		}
 
 #ifdef _DEBUG
-		ID3D11Debug *debugDev;
-		m_pDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debugDev));
-		debugDev->ReportLiveDeviceObjects( D3D11_RLDO_DETAIL );
-		SafeRelease(debugDev)
+		// ID3D11Debug *debugDev;
+		// m_pDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debugDev));
+		// debugDev->ReportLiveDeviceObjects( D3D11_RLDO_DETAIL );
+		// SafeRelease(debugDev)
 #endif
+
+		
 		SafeRelease(m_pDevice)
 	}
 

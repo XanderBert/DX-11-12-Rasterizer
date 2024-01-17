@@ -17,7 +17,6 @@ const static float gShininess = 1.25f;
 
 
 //Should be grouped in a constant buffer
-uniform extern float4x4 gViewInverseMatrix : ViewInverseMatrix;
 uniform extern float4x4 gWorldViewProj : WorldViewProjection;
 uniform extern float4x4 gWorldmatrix : WorldMatrix;
 uniform extern float3 gCameraPosition : Camera;
@@ -55,7 +54,13 @@ BlendState gBlendState
 };
 
 
-SamplerState gSampler : register(s0){};
+SamplerState gSampler : register(s0)
+{ 
+	Filter = MIN_MAG_MIP_LINEAR;
+ 	AddressU = WRAP;
+	AddressV = WRAP;
+	AddressW = WRAP;
+};
 
 DepthStencilState gNoDepthStencil
 {

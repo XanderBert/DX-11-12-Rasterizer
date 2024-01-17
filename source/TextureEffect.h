@@ -56,7 +56,7 @@ class TextureEffect : public PosCol3DEffect
 {
 public:
     TextureEffect(ID3D11Device* pDevice, const std::wstring& assetFile, const LPCSTR& techniqueName);
-    ~TextureEffect() override;
+    virtual ~TextureEffect() override;
 
     TextureEffect(const TextureEffect&) = delete;
     TextureEffect(TextureEffect&&) noexcept = delete;
@@ -64,8 +64,7 @@ public:
     TextureEffect& operator=(TextureEffect&&) noexcept = delete;
 
     void SetTextureMap(TextureType type, ID3D11ShaderResourceView* pResourceView) const;
-
-    void SetViewInverseMatrix(const dae::Matrix* viewInverseMatrix) const;
+    
     void SetWorldMatrix(const dae::Matrix* worldMatrix) const;
     void SetCameraPosition(const dae::Vector3* cameraPosition) const;
 
@@ -80,10 +79,7 @@ protected:
     ID3DX11EffectShaderResourceVariable* m_pGlossinessVariable{ nullptr };
     ID3DX11EffectShaderResourceVariable* m_pPartialCoverageMapVariable{ nullptr };
     
-    ID3DX11EffectMatrixVariable* m_pViewInverseMatrixVariable{ nullptr };
     ID3DX11EffectMatrixVariable* m_pWorldMatrixVariable{ nullptr };
-
-    //Try this instead of the viewInverse;
     ID3DX11EffectVectorVariable* m_pCameraPositionVariable{ nullptr };
 
     //Sampler state:

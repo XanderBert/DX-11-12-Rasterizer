@@ -5,7 +5,10 @@ class PosCol3DEffect : public IEffect
 {
 public :
     PosCol3DEffect(ID3D11Device* pDevice, const std::wstring& assetFile, const LPCSTR& techniqueName);
-    ~PosCol3DEffect() override = default;
+    ~PosCol3DEffect() override
+    {
+        SafeRelease(m_pWorldViewProjectionVar);
+    }
 
     PosCol3DEffect(const PosCol3DEffect&) = delete;
     PosCol3DEffect(PosCol3DEffect&&) noexcept = delete;

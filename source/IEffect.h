@@ -6,6 +6,7 @@ public:
     IEffect(ID3D11Device* pDevice, const std::wstring& assetFile, const LPCSTR& techniqueName);
     virtual ~IEffect();
 
+
     IEffect(const IEffect&) = delete;
     IEffect(IEffect&&) noexcept = delete;
     IEffect& operator=(const IEffect&) = delete;
@@ -15,7 +16,6 @@ public:
     
     ID3DX11Effect* GetEffect() const { return m_pEffect; }
     ID3DX11EffectTechnique* GetTechnique() const { return m_pTechnique; }
-
 
 protected:
     ID3DX11Effect* m_pEffect{ nullptr };

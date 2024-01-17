@@ -96,6 +96,7 @@ Mesh::~Mesh()
     SafeRelease(m_pVertexBuffer)
     SafeRelease(m_pInputLayout)
     SafeRelease(m_pIndexBuffer)
+    
     SafeDelete(m_pEffect)
     SafeRelease(m_pFireVertexBuffer)
     SafeRelease(m_pFireIndexBuffer)
@@ -193,7 +194,6 @@ void Mesh::Update(const dae::Timer* pTimer, dae::Matrix* worldProjectionMatrix, 
     m_pEffect->SetWorldMatrix(&m_WorldMatrix); // Use the combined matrix for the model transformation
     m_pEffect->SetCameraPosition(cameraPosition);
     m_pEffect->SetWorldViewProjectionMatrix(&worldViewPorjectionMatrix);
-    m_pEffect->SetViewInverseMatrix(viewInverseMatrix);
 }
 
 void Mesh::CreateTexture(const std::string& assetLocation, ID3D11Device* pDevice, Texture*& pTexture)
