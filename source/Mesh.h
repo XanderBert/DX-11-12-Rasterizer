@@ -28,11 +28,14 @@ public:
     void Update(const dae::Timer* pTimer, dae::Matrix* worldViewProjectionMatrix, dae::Matrix* viewInverseMatrix, dae::Vector3* cameraPosition);
     
     
-    
-    //TODO: Should be checked if it really behaves properly
-    void IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
     void SetTextureMap(const std::string& assetLocation, ID3D11Device* pDevice, TextureType type);
     void SetupPartialCoverageEffect(ID3D11Device* pDevice);
+
+    TextureEffect* GetEffect() const
+    {
+        assert(m_pEffect != nullptr && "Mesh::GetEffect() -> m_pEffect is nullptr!");
+        return m_pEffect;
+    }
 
 private:
     //Takes a pointer to a pointer to a texture
@@ -50,8 +53,8 @@ private:
     uint32_t m_FireNumIndices{ 0 };
     
     TextureEffect* m_pEffect{ nullptr };
-    D3D11_FILTER m_SamplerFilter{ D3D11_FILTER_MIN_MAG_MIP_LINEAR };
-
+    
+    
     dae::Matrix m_WorldMatrix{dae::Matrix::Identity()};
 
 

@@ -28,9 +28,35 @@ TextureEffect::TextureEffect(ID3D11Device* pDevice, const std::wstring& assetFil
     m_pCameraPositionVariable = m_pEffect->GetVariableByName("gCameraPosition")->AsVector();
     assert(m_pCameraPositionVariable->IsValid() && "Effect::Effect() -> gCameraPosition variable not valid!");
     
-
     m_pWorldMatrixVariable = m_pEffect->GetVariableByName("gWorldmatrix")->AsMatrix();
     assert(m_pWorldMatrixVariable->IsValid() && "Effect::Effect() -> gWorldmatrix variable not valid!");
+
+    m_pSamplerVariable = m_pEffect->GetVariableByName("gSampler")->AsSampler();
+    assert(m_pSamplerVariable->IsValid() && "Effect::Effect() -> gSampler variable not valid!");
+
+    
+    //Sampler state
+    D3D11_SAMPLER_DESC samplerDesc{};
+    samplerDesc.Filter = SamplerManager::GetCurrentSamplerDirectXType();
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    samplerDesc.MinLOD = 0;
+    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    
+    HRESULT hr = pDevice->CreateSamplerState(&samplerDesc, &m_pSamplerState);
+    assert(SUCCEEDED(hr) && "TextureEffect::TextureEffect() -> CreateSamplerState() failed!");
+
+    
+    m_pSamplerVariable->SetSampler(0, m_pSamplerState);
+    m_pSamplerState->Release();
+}
+
+TextureEffect::~TextureEffect()
+{
+    if(m_pSamplerState)
+    m_pSamplerState->Release();
 }
 
 void TextureEffect::SetTextureMap(TextureType type, ID3D11ShaderResourceView* pResourceView) const
@@ -68,6 +94,29 @@ void TextureEffect::SetWorldMatrix(const dae::Matrix* worldMatrix) const
 void TextureEffect::SetCameraPosition(const dae::Vector3* cameraPosition) const
 {
     m_pCameraPositionVariable->SetFloatVector(reinterpret_cast<const float*>(cameraPosition));
+}
+
+void TextureEffect::IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
+{
+    assert(pDevice != nullptr && "Mesh::IncrementFilter() -> pDevice is nullptr!");
+    assert(pDeviceContext != nullptr && "Mesh::IncrementFilter() -> pDeviceContext is nullptr!");
+    
+    //Sampler state
+    D3D11_SAMPLER_DESC samplerDesc{};
+    samplerDesc.Filter =   SamplerManager::NextSamplerType();
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP; //D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    samplerDesc.MinLOD = 0;
+    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    
+    HRESULT hr = pDevice->CreateSamplerState(&samplerDesc, &m_pSamplerState);
+    assert(SUCCEEDED(hr) && "TextureEffect::TextureEffect() -> CreateSamplerState() failed!");
+
+    
+    m_pSamplerVariable->SetSampler(0, m_pSamplerState);
+    m_pSamplerState->Release();
 }
 
 

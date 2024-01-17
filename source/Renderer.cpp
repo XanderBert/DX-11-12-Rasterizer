@@ -87,7 +87,8 @@ namespace dae {
 
 	void Renderer::IncrementFilter() const
 	{
-		m_pMesh->IncrementFilter(m_pDevice, m_pDeviceContext);
+		m_pMesh->GetEffect()->IncrementFilter(m_pDevice, m_pDeviceContext);
+		//->IncrementFilter(m_pDevice, m_pDeviceContext);
 	}
 
 	void Renderer::InitializeMesh()
