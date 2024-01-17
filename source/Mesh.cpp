@@ -97,6 +97,8 @@ Mesh::~Mesh()
     SafeRelease(m_pInputLayout)
     SafeRelease(m_pIndexBuffer)
     SafeDelete(m_pEffect)
+    SafeRelease(m_pFireVertexBuffer)
+    SafeRelease(m_pFireIndexBuffer)
 
     //Delete the textures
     //TODO the mesh does take ownership  of the textures, This makes texture instancing impossible
