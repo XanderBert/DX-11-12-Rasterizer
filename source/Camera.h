@@ -46,7 +46,7 @@ namespace dae
         Vector3 m_Origin = { 0.f, 0.f, 0.f };
 
         float m_NearPlane = 0.1f;
-        float m_FarPlane = 100.f;
+        float m_FarPlane = 1000.f;
 
 
         Vector3 m_Forward = { 0.f, 0.f, 1.f };

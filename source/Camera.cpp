@@ -51,18 +51,23 @@ namespace dae
 
 		m_Origin += direction;
 
-		// Calculate the rotation matrix with the new pitch and yaw
-		const Matrix rotationMatrix = Matrix::CreateRotationX(m_Pitch) * Matrix::CreateRotationY(m_Yaw);
-
-		// Calculate the new forward vector with the new pitch and yaw
-		m_Forward = rotationMatrix.TransformVector(Vector3::UnitZ);
+		// // Calculate the rotation matrix with the new pitch and yaw
+		// const Matrix rotationMatrix = Matrix::CreateRotationX(m_Pitch) * Matrix::CreateRotationY(m_Yaw);
+		//
+		// // Calculate the new forward vector with the new pitch and yaw
+	
     }
 
     Matrix Camera::GetViewMatrix()
     {
+    	
+    	const Matrix rotationMatrix = Matrix::CreateRotationX(m_Pitch) * Matrix::CreateRotationY(m_Yaw);
+    	m_Forward = rotationMatrix.TransformVector(Vector3::UnitZ);
+    	
     	//Update the right vector
     	m_Right = Vector3::Cross(Vector3::UnitY, m_Forward).Normalized();
 
+    	
     	//Get the inverseViewMatrix
     	const Matrix lookAt = Matrix::CreateLookAtLH(m_Origin, m_Forward);
 

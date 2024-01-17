@@ -13,7 +13,7 @@ namespace dae
         : m_pWindow(pWindow)
         {
             SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
-            const Vector3 origin{ 0.f, 0.f, -50.f };
+            const Vector3 origin{ 0.f, 0.f, -105.f };
             m_pCamera = std::make_unique<Camera>(origin, 45.f, (static_cast<float>(m_Width) / static_cast<float>(m_Height)));
         }
         virtual ~IRenderer() = default;

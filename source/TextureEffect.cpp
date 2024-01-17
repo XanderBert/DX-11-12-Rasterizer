@@ -22,8 +22,8 @@ TextureEffect::TextureEffect(ID3D11Device* pDevice, const std::wstring& assetFil
     m_pPartialCoverageMapVariable = m_pEffect->GetVariableByName("gFireEffectMap")->AsShaderResource();
     assert(m_pPartialCoverageMapVariable->IsValid() && "TextureEffect::TextureEffect() -> GetVariableByName() not valid!");
 
-    // m_pViewInverseMatrixVariable = m_pEffect->GetVariableByName("gViewInverseMatrix")->AsMatrix();
-    // assert(m_pViewInverseMatrixVariable->IsValid() && "Effect::Effect() -> gViewInverseMatrix variable not valid!");
+     m_pViewInverseMatrixVariable = m_pEffect->GetVariableByName("gViewInverseMatrix")->AsMatrix();
+    assert(m_pViewInverseMatrixVariable->IsValid() && "Effect::Effect() -> gViewInverseMatrix variable not valid!");
 
     m_pCameraPositionVariable = m_pEffect->GetVariableByName("gCameraPosition")->AsVector();
     assert(m_pCameraPositionVariable->IsValid() && "Effect::Effect() -> gCameraPosition variable not valid!");

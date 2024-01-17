@@ -176,20 +176,22 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
 
 }
 
-void Mesh::Update(const dae::Timer* pTimer, dae::Matrix* worldViewProjectionMatrix, dae::Matrix* viewInverseMatrix, dae::Vector3* cameraPosition)
+void Mesh::Update(const dae::Timer* pTimer, dae::Matrix* worldProjectionMatrix, dae::Matrix* viewInverseMatrix, dae::Vector3* cameraPosition)
 {
-    assert(worldViewProjectionMatrix != nullptr && "Mesh::Update() -> worldViewProjectionMatrix is nullptr!");
-    m_pEffect->SetWorldViewProjectionMatrix(worldViewProjectionMatrix);
-
+    assert(worldProjectionMatrix != nullptr && "Mesh::Update() -> worldViewProjectionMatrix is nullptr!");
     assert(viewInverseMatrix != nullptr && "Mesh::Update() -> viewInverseMatrix is nullptr!");
-    //m_pEffect->SetViewInverseMatrix(viewInverseMatrix);
 
-    const dae::Matrix rotationMatrix = dae::Matrix::CreateRotationY(pTimer->GetElapsed());
+    
+    const dae::Matrix rotationMatrix = dae::Matrix::CreateRotationY((pTimer->GetElapsed() * dae::TO_RADIANS * 5.f));
     m_WorldMatrix *= rotationMatrix;
+
+    const dae::Matrix worldViewPorjectionMatrix = m_WorldMatrix * (*worldProjectionMatrix);
+
     
     m_pEffect->SetWorldMatrix(&m_WorldMatrix); // Use the combined matrix for the model transformation
-
     m_pEffect->SetCameraPosition(cameraPosition);
+    m_pEffect->SetWorldViewProjectionMatrix(&worldViewPorjectionMatrix);
+    m_pEffect->SetViewInverseMatrix(viewInverseMatrix);
 }
 
 void Mesh::CreateTexture(const std::string& assetLocation, ID3D11Device* pDevice, Texture*& pTexture)
