@@ -36,7 +36,15 @@ public:
         assert(m_pEffect != nullptr && "Mesh::GetEffect() -> m_pEffect is nullptr!");
         return m_pEffect;
     }
+    
+    void ToggleRotation() { m_RotationEnabled = !m_RotationEnabled; }
+    void SetRotation(bool enabled) { m_RotationEnabled = enabled; }
+    bool* GetpRotation() { return &m_RotationEnabled; }
 
+    void ToggleFireEffect() { m_UseFireEffect = !m_UseFireEffect; }
+    void SetFireEffect(bool enabled) { m_UseFireEffect = enabled; }
+    bool* GetpFireEffect() { return &m_UseFireEffect; }
+    
 private:
     //Takes a pointer to a pointer to a texture
     static void CreateTexture(const std::string& assetLocation, ID3D11Device* pDevice, Texture*& pTexture);
@@ -57,5 +65,7 @@ private:
     
     dae::Matrix m_WorldMatrix{dae::Matrix::Identity()};
 
-
+    
+    bool m_RotationEnabled{ true };
+    bool m_UseFireEffect{ true };
 };

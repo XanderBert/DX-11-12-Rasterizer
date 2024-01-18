@@ -82,19 +82,32 @@ namespace dae {
 		ImGui::Text("Use Normal: ");
 		ImGui::SameLine();
 		
-		if(ImGui::Button("Toggle Normal Map"))
+		//TODO: Figure out why the checkbox has an inverted state as the underlaying bool
+		ImGui::Checkbox("##UseNormal", m_pMesh->GetEffect()->IsNormalMapEnabled());
+		if(ImGui::IsItemClicked())
 		{
-			m_pMesh->GetEffect()->ToggleNormalMap();
+			m_pMesh->GetEffect()->UpdateUseNormal();
 		}
 
-		// if(ImGui::Checkbox("##UseNormal", &m_pMesh->GetEffect()->IsNormalMapEnabled()))
-		// {
-		// 	m_pMesh->GetEffect()->ToggleNormalMap();
-		// }
+		ImGui::NewLine();
+		ImGui::Text("Rotate: ");
+		ImGui::SameLine();
+		ImGui::Checkbox("##Rotate", m_pMesh->GetpRotation());
 
-		//std::cout << m_pMesh->GetEffect()->IsNormalMapEnabled() << '\n';
+		ImGui::NewLine();
+		ImGui::Text("Fire FX: ");
+		ImGui::SameLine();
+		ImGui::Checkbox("##FireFX", m_pMesh->GetpFireEffect());
 
 		
+		ImGui::NewLine();
+		ImGui::Text("Light Direction: ");
+		ImGui::SameLine();
+		ImGui::SliderFloat3("##Light Direction", m_pMesh->GetEffect()->GetLightDirection(), -10.f, 10.f);
+		if(ImGui::IsItemEdited())
+		{
+			m_pMesh->GetEffect()->UpdateLightDirection();
+		}
 #endif
 	}
 

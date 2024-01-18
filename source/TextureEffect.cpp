@@ -32,8 +32,13 @@ TextureEffect::TextureEffect(ID3D11Device* pDevice, const std::wstring& assetFil
     assert(m_pSamplerVariable->IsValid() && "Effect::Effect() -> gSampler variable not valid!");
 
     m_pNormalMapEnabledVariable = m_pEffect->GetVariableByName("gUseTextureNormal")->AsScalar();
-    assert(m_pSamplerVariable->IsValid() && "Effect::Effect() -> gUseTextureNormal variable not valid!");
+    assert(m_pNormalMapEnabledVariable->IsValid() && "Effect::Effect() -> gUseTextureNormal variable not valid!");
+    UpdateUseNormal();
 
+
+    m_pLightDirectionVariable = m_pEffect->GetVariableByName("gLightDirection")->AsVector();
+    assert(m_pLightDirectionVariable->IsValid() && "Effect::Effect() -> gLightDirection variable not valid!");
+    
     
     //Sampler state
     D3D11_SAMPLER_DESC samplerDesc{};
@@ -134,14 +139,25 @@ std::string TextureEffect::GetCurrentSamplerType()
 
 void TextureEffect::ToggleNormalMap()
 {
-    m_IsNormalMapEnabled = !m_IsNormalMapEnabled;
-    m_pNormalMapEnabledVariable->SetBool(m_IsNormalMapEnabled);
-
+    SetNormalMap(!m_IsNormalMapEnabled);
 }
 
-bool& TextureEffect::IsNormalMapEnabled()
+void TextureEffect::SetNormalMap(bool isEnabled)
 {
-    return m_IsNormalMapEnabled;
+    m_IsNormalMapEnabled = isEnabled;
+    UpdateUseNormal();
+}
+
+void TextureEffect::UpdateUseNormal()
+{
+
+    std::cout << " m_IsNormalMapEnabled: " << m_IsNormalMapEnabled << '\n';
+    m_pNormalMapEnabledVariable->SetBool(!m_IsNormalMapEnabled);
+}
+
+bool* TextureEffect::IsNormalMapEnabled()
+{
+    return &m_IsNormalMapEnabled;
 }
 
 

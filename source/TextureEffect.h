@@ -87,7 +87,24 @@ public:
     static std::string GetCurrentSamplerType();
 
     void ToggleNormalMap();
-    bool& IsNormalMapEnabled();
+    void SetNormalMap(bool isEnabled);
+    void UpdateUseNormal();
+    bool* IsNormalMapEnabled();
+
+
+    float* GetLightDirection()
+    {
+        m_pLightDirectionVariable->GetFloatVector(m_pLightDirection);
+        return m_pLightDirection;
+    }
+
+    void UpdateLightDirection()
+    {
+        m_pLightDirectionVariable->SetFloatVector(m_pLightDirection);
+    }
+
+    
+    
 protected:
     //TODO: There should be a way to just add and remove textures instead of having a fixed set of textures
     //This means i should get rid of the static enum class TextureType and find a dynamic way to bind types with textures 
@@ -105,6 +122,10 @@ protected:
 
     //Normal map bool
     ID3DX11EffectScalarVariable* m_pNormalMapEnabledVariable{ nullptr };
+    bool m_IsNormalMapEnabled{ true };
 
-   bool m_IsNormalMapEnabled{ true };
+    //Light Direction
+    ID3DX11EffectVectorVariable* m_pLightDirectionVariable{ nullptr };
+    float m_pLightDirection[3]{};
+    
 };

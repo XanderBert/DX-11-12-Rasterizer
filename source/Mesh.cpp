@@ -153,6 +153,12 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
         pDeviceContext->DrawIndexed(m_NumIndices, 0, 0);
     }
 
+    
+//-----------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
+    if(!m_UseFireEffect) return;
+
+    
     //Update the Technique
     m_pEffect->SetTechnique("FlatPartialCoverageTechnique");
 
@@ -169,14 +175,12 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
     //------------------------
     // Draw
     //------------------------
-    //TODO: Update the technique
     m_pEffect->GetTechnique()->GetDesc(&techDesc);
     for (UINT p = 0; p < techDesc.Passes; ++p)
     {
         m_pEffect->GetTechnique()->GetPassByIndex(p)->Apply(0, pDeviceContext);
         pDeviceContext->DrawIndexed(m_FireNumIndices, 0, 0);
     }
-
 }
 
 void Mesh::Update(const dae::Timer* pTimer, dae::Matrix* worldProjectionMatrix, dae::Matrix* viewInverseMatrix, dae::Vector3* cameraPosition)
@@ -184,12 +188,16 @@ void Mesh::Update(const dae::Timer* pTimer, dae::Matrix* worldProjectionMatrix, 
     assert(worldProjectionMatrix != nullptr && "Mesh::Update() -> worldViewProjectionMatrix is nullptr!");
     assert(viewInverseMatrix != nullptr && "Mesh::Update() -> viewInverseMatrix is nullptr!");
 
-    
-    const dae::Matrix rotationMatrix = dae::Matrix::CreateRotationY((pTimer->GetElapsed() * dae::TO_RADIANS * 5.f));
-    m_WorldMatrix *= rotationMatrix;
 
+    if(m_RotationEnabled)
+    {
+        const dae::Matrix rotationMatrix = dae::Matrix::CreateRotationY((pTimer->GetElapsed() * dae::TO_RADIANS * 5.f));
+        m_WorldMatrix *= rotationMatrix;
+    }
+
+
+    //TODO calculate this in the camera and pass it allong.
     const dae::Matrix worldViewPorjectionMatrix = m_WorldMatrix * (*worldProjectionMatrix);
-
     
     m_pEffect->SetWorldMatrix(&m_WorldMatrix); // Use the combined matrix for the model transformation
     m_pEffect->SetCameraPosition(cameraPosition);

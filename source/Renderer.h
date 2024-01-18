@@ -19,7 +19,10 @@ namespace dae
 
 		ID3D11Device* GetDevice() const { return m_pDevice; }
 		ID3D11DeviceContext* GetDeviceContext() const { return m_pDeviceContext; }
-		
+
+
+
+	
 	private:
 		virtual HRESULT InitializeDirectX() override;
 		
@@ -36,5 +39,6 @@ namespace dae
 		ID3D11DepthStencilView* m_pDepthStencilView;
 		ID3D11Resource* m_pRenderTargetBuffer;
 		ID3D11RenderTargetView* m_pRenderTargetView;
+
 	};
 }

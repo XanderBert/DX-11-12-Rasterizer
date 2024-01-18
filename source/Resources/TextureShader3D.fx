@@ -9,14 +9,14 @@ const static bool gFlipGreenChannel = false;
 const static bool gUseHalfLambert = true;
 const static bool gUseCookTorrance = false;
 
-const static float3 gLightDirection : LightDirection = float3(0.577f, -0.577f, 0.577f);
 const static float3 gLightColor : LightColor = float3(1,1,1);
 const static float gPi  = 3.14159265359;
 const static float gShininess = 1.25f;
 
 
 //Should be grouped in a constant buffer
-bool gUseTextureNormal = true;
+uniform extern float3 gLightDirection : LightDirection = float3(0.577f, -0.577f, 0.577f);
+bool gUseTextureNormal = false;
 uniform extern float4x4 gWorldViewProj : WorldViewProjection;
 uniform extern float4x4 gWorldmatrix : WorldMatrix;
 uniform extern float3 gCameraPosition : Camera;
@@ -172,13 +172,13 @@ float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
 	{
 		float3 normalMap = gNormalMap.Sample(gSampler, texCoord).rgb;
 	
-		//newNormal.x = 2 * normalMap.x - 1;
-		//newNormal.y = 2 * normalMap.y - 1;
-		//newNormal.z = 2 * normalMap.z - 1;
+		newNormal.x = 2 * normalMap.x - 1;
+		newNormal.y = 2 * normalMap.y - 1;
+		newNormal.z = 2 * normalMap.z - 1;
 
-		newNormal.x =  normalMap.x ;
-		newNormal.y =  normalMap.y ;
-		newNormal.z =  normalMap.z ;
+		//newNormal.x =  normalMap.x ;
+		//newNormal.y =  normalMap.y ;
+		//newNormal.z =  normalMap.z ;
 		
 		if(gFlipGreenChannel) newNormal.x = -newNormal.x;
 	}
@@ -285,7 +285,7 @@ VertexShaderOutput VS(VertexShaderInput input)
 void CalculateViewDirection(float3 worldPos, out float3 viewDirection)
 {
 	float3 invViewDirection = normalize(gCameraPosition - worldPos);
-	viewDirection = -invViewDirection;
+	viewDirection = invViewDirection;
 }
 
 
