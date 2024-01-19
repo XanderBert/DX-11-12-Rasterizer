@@ -187,20 +187,18 @@ void Mesh::Update(const dae::Timer* pTimer, dae::Matrix* worldProjectionMatrix, 
 {
     assert(worldProjectionMatrix != nullptr && "Mesh::Update() -> worldViewProjectionMatrix is nullptr!");
     assert(viewInverseMatrix != nullptr && "Mesh::Update() -> viewInverseMatrix is nullptr!");
-
-
+    
     if(m_RotationEnabled)
     {
         const dae::Matrix rotationMatrix = dae::Matrix::CreateRotationY((pTimer->GetElapsed() * dae::TO_RADIANS * 5.f));
         m_WorldMatrix *= rotationMatrix;
     }
 
-
     //TODO calculate this in the camera and pass it allong.
     const dae::Matrix worldViewPorjectionMatrix = m_WorldMatrix * (*worldProjectionMatrix);
-    
-    m_pEffect->SetWorldMatrix(&m_WorldMatrix); // Use the combined matrix for the model transformation
-    m_pEffect->SetCameraPosition(cameraPosition);
+    m_pEffect->Update(pTimer->GetTotal(), &m_WorldMatrix, *cameraPosition);
+
+    //todo make the uptdate function of the effect interface to be overriden
     m_pEffect->SetWorldViewProjectionMatrix(&worldViewPorjectionMatrix);
 }
 

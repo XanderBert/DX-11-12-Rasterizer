@@ -73,41 +73,182 @@ namespace dae {
 		{
 			IncrementFilter();	
 		}
-
 		ImGui::SameLine();
 		ImGui::Text("Current Filter: ");
 		ImGui::SameLine();
 		ImGui::Text(m_pMesh->GetEffect()->GetCurrentSamplerType().c_str());
-		ImGui::NewLine();
-		ImGui::Text("Use Normal: ");
-		ImGui::SameLine();
-		
-		//TODO: Figure out why the checkbox has an inverted state as the underlaying bool
-		ImGui::Checkbox("##UseNormal", m_pMesh->GetEffect()->IsNormalMapEnabled());
-		if(ImGui::IsItemClicked())
-		{
-			m_pMesh->GetEffect()->UpdateUseNormal();
-		}
 
+		
+		//NormalMap
+		ImGui::NewLine();
+		if(ImGui::Button("Toggle Normal Map"))
+		{
+			m_pMesh->GetEffect()->GetUseNormalBool()->Toggle();
+		}
+		ImGui::SameLine();
+		ImGui::Text(m_pMesh->GetEffect()->GetUseNormalString().c_str());
+
+		if(m_pMesh->GetEffect()->GetUseNormalBool()->Get())
+		{
+			ImGui::Indent();
+			
+			
+			//NormalMap Remap
+			ImGui::NewLine();
+			if(ImGui::Button("Toggle Normal Map Remapping"))
+			{
+				m_pMesh->GetEffect()->GetRemapNormalRangeBool()->Toggle();
+			}
+			ImGui::SameLine();
+			ImGui::Text(m_pMesh->GetEffect()->GetRemapNormalRangeString().c_str());
+		
+			//NormalMap Flip Green
+			ImGui::NewLine();
+			if(ImGui::Button("Toggle Normal Green Channel"))
+			{
+				m_pMesh->GetEffect()->GetFlipGreenChannelBool()->Toggle();
+			}
+			ImGui::SameLine();
+			ImGui::Text(m_pMesh->GetEffect()->GetFlipGreenChannelString().c_str());
+
+
+			ImGui::Unindent();
+		}
+		
+		//Use Cook Torrance
+		ImGui::NewLine();
+		if(ImGui::Button("Toggle Cook Torrance"))
+		{
+			m_pMesh->GetEffect()->GetUseCookTorranceBool()->Toggle();
+		}
+		ImGui::SameLine();
+		ImGui::Text("Lighting Model: ");
+		ImGui::SameLine();
+		ImGui::Text(m_pMesh->GetEffect()->GetUseCookTorranceString().c_str());
+
+
+		ImGui::Indent();
+		if(m_pMesh->GetEffect()->GetUseCookTorranceBool()->Get())
+		{
+			
+			//Light Color
+			ImGui::NewLine();
+			ImGui::Text("Cook Torrance Light Color");
+			ImGui::SameLine();
+			ImGui::ColorEdit3("##Light Color", m_pMesh->GetEffect()->GetLightColorVector()->GetAddressOf());
+			if(ImGui::IsItemEdited())
+			{
+				m_pMesh->GetEffect()->GetLightColorVector()->UpdateEffect();
+			}
+		}else
+		{
+			//Use Specular
+			ImGui::NewLine();
+			if(ImGui::Button("Toggle Blinn/Specular"))
+			{
+				m_pMesh->GetEffect()->GetUseSpecularBool()->Toggle();
+			}
+			ImGui::SameLine();
+			ImGui::Text("Active Reflection Model: ");
+			ImGui::SameLine();
+			ImGui::Text(m_pMesh->GetEffect()->GetUseSpecularString().c_str());
+
+			//Use Half Lambert
+			ImGui::NewLine();
+			if(ImGui::Button("Toggle Half Lambert"))
+			{
+				m_pMesh->GetEffect()->GetUseHalfLambertBool()->Toggle();
+			}
+			ImGui::SameLine();
+			ImGui::Text("Lambert Model: ");
+			ImGui::SameLine();
+			ImGui::Text(m_pMesh->GetEffect()->GetHalfLambertString().c_str());
+
+			//Ambient Color
+			ImGui::NewLine();
+			ImGui::Text("Ambient Color");
+			ImGui::SameLine();
+			ImGui::ColorEdit3("##Ambient Color", m_pMesh->GetEffect()->GetAmbientColorVector()->GetAddressOf());
+			if(ImGui::IsItemEdited())
+			{
+				m_pMesh->GetEffect()->GetAmbientColorVector()->UpdateEffect();
+			}
+		}
+		ImGui::Unindent();
+
+
+		
+		//Rotation
 		ImGui::NewLine();
 		ImGui::Text("Rotate: ");
 		ImGui::SameLine();
 		ImGui::Checkbox("##Rotate", m_pMesh->GetpRotation());
 
+		//Fire FX
 		ImGui::NewLine();
 		ImGui::Text("Fire FX: ");
 		ImGui::SameLine();
 		ImGui::Checkbox("##FireFX", m_pMesh->GetpFireEffect());
 
-		
+		if(*m_pMesh->GetpFireEffect())
+		{
+			ImGui::Indent();
+			//Use Combustion Animation
+			ImGui::NewLine();
+			if(ImGui::Button("Toggle Combustion Animation"))
+			{
+				m_pMesh->GetEffect()->GetUseCombustionModulationBool()->Toggle();
+			}
+			ImGui::SameLine();
+			ImGui::Text("Combustion Animation: ");
+			ImGui::SameLine();
+			ImGui::Text(m_pMesh->GetEffect()->GetUseCombustionModulationString().c_str());
+
+			ImGui::Unindent();
+		}
+
+		//Light Direction
 		ImGui::NewLine();
 		ImGui::Text("Light Direction: ");
 		ImGui::SameLine();
-		ImGui::SliderFloat3("##Light Direction", m_pMesh->GetEffect()->GetLightDirection(), -10.f, 10.f);
+		ImGui::SliderFloat3("##Light Direction", m_pMesh->GetEffect()->GetLightDirectionVector()->GetAddressOf(), -1.f, 1.f);
 		if(ImGui::IsItemEdited())
 		{
-			m_pMesh->GetEffect()->UpdateLightDirection();
+			m_pMesh->GetEffect()->GetLightDirectionVector()->UpdateEffect();
 		}
+		
+		//Shininess
+		ImGui::NewLine();
+		ImGui::Text("Shininess: ");
+		ImGui::SameLine();
+		ImGui::SliderFloat("##Shininess", m_pMesh->GetEffect()->GetShininessFloat()->GetAddressOf(),0.01f, 30.f);
+		if(ImGui::IsItemEdited())
+		{
+			m_pMesh->GetEffect()->GetShininessFloat()->UpdateEffect();
+		}
+		
+		//Light Intensity
+		ImGui::NewLine();
+		ImGui::Text("Light Intensity: ");
+		ImGui::SameLine();
+		ImGui::SliderFloat("##Light Intensity", m_pMesh->GetEffect()->GetLightIntensityFloat()->GetAddressOf(),0.0f, 30.f);
+		if(ImGui::IsItemEdited())
+		{
+			m_pMesh->GetEffect()->GetLightIntensityFloat()->UpdateEffect();
+		}
+		
+		//Contrast
+		ImGui::NewLine();
+		ImGui::Text("Contrast: ");
+		ImGui::SameLine();
+		ImGui::SliderFloat("##Contrast", m_pMesh->GetEffect()->GetContrastFloat()->GetAddressOf(),0.0f, 4.f);
+		if(ImGui::IsItemEdited())
+		{
+			m_pMesh->GetEffect()->GetContrastFloat()->UpdateEffect();
+		}
+
+
+		
 #endif
 	}
 

@@ -2,6 +2,7 @@
 #include <functional>
 #include <map>
 
+#include "Dx11EffectVariables.h"
 #include "PosCol3DEffect.h"
 
 enum class TextureType : uint8_t
@@ -79,33 +80,47 @@ public:
     TextureEffect& operator=(TextureEffect&&) noexcept = delete;
 
     void SetTextureMap(TextureType type, ID3D11ShaderResourceView* pResourceView) const;
-    
-    void SetWorldMatrix(const dae::Matrix* worldMatrix) const;
-    void SetCameraPosition(const dae::Vector3* cameraPosition) const;
 
+    void Update(float elapsedSec, const dae::Matrix* worldMatrix, const dae::Vector3& cameraPosition); 
+    
     void IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
     static std::string GetCurrentSamplerType();
-
-    void ToggleNormalMap();
-    void SetNormalMap(bool isEnabled);
-    void UpdateUseNormal();
-    bool* IsNormalMapEnabled();
-
-
-    float* GetLightDirection()
-    {
-        m_pLightDirectionVariable->GetFloatVector(m_pLightDirection);
-        return m_pLightDirection;
-    }
-
-    void UpdateLightDirection()
-    {
-        m_pLightDirectionVariable->SetFloatVector(m_pLightDirection);
-    }
-
     
+    DX11EffectVector3* GetLightDirectionVector(){return &m_LightDirectionVector;}
+    DX11EffectVector3* GetAmbientColorVector(){return &m_AmbientColorVector;}
+    DX11EffectVector3* GetLightColorVector(){return &m_LightColorVector;}
+
+    std::string GetUseNormalString();
+    DX11EffectBool* GetUseNormalBool() {return &m_UseNormalMapBool; }
     
+    std::string GetUseSpecularString();
+    DX11EffectBool* GetUseSpecularBool() {return &m_UseSpecularBool; }
+    
+    std::string GetHalfLambertString();
+    DX11EffectBool* GetUseHalfLambertBool() {return &m_UseHalfLambertBool; }
+
+    std::string GetFlipGreenChannelString();
+    DX11EffectBool* GetFlipGreenChannelBool() {return &m_FlipGreenChannelBool; }
+
+    std::string GetRemapNormalRangeString();
+    DX11EffectBool* GetRemapNormalRangeBool() {return &m_RemapNormalRangeBool; }
+
+    std::string GetUseCookTorranceString();
+    DX11EffectBool* GetUseCookTorranceBool() {return &m_UseCookTorranceBool; }
+
+    std::string GetUseCombustionModulationString();
+    DX11EffectBool* GetUseCombustionModulationBool() {return &m_UseCombustionModulation; }
+    
+    DX11EffectFloat* GetShininessFloat() {return &m_ShininessFloat; }
+    DX11EffectFloat* GetLightIntensityFloat() {return &m_ShininessFloat; }
+    DX11EffectFloat* GetContrastFloat() {return &m_ContrastFloat; }
+
+
 protected:
+    void SetWorldMatrix(const dae::Matrix* worldMatrix) const;
+    void SetCameraPosition(const dae::Vector3& cameraPosition);
+
+
     //TODO: There should be a way to just add and remove textures instead of having a fixed set of textures
     //This means i should get rid of the static enum class TextureType and find a dynamic way to bind types with textures 
     ID3DX11EffectShaderResourceVariable* m_pDiffuseMapVariable{ nullptr };
@@ -115,17 +130,21 @@ protected:
     ID3DX11EffectShaderResourceVariable* m_pPartialCoverageMapVariable{ nullptr };
     
     ID3DX11EffectMatrixVariable* m_pWorldMatrixVariable{ nullptr };
-    ID3DX11EffectVectorVariable* m_pCameraPositionVariable{ nullptr };
-
-    //Sampler state:
     ID3DX11EffectSamplerVariable* m_pSamplerVariable{ nullptr };
-
-    //Normal map bool
-    ID3DX11EffectScalarVariable* m_pNormalMapEnabledVariable{ nullptr };
-    bool m_IsNormalMapEnabled{ true };
-
-    //Light Direction
-    ID3DX11EffectVectorVariable* m_pLightDirectionVariable{ nullptr };
-    float m_pLightDirection[3]{};
     
+    DX11EffectFloat m_TimeFloat;
+    DX11EffectFloat m_ContrastFloat;
+    DX11EffectFloat m_ShininessFloat;
+    DX11EffectFloat m_LightIntensityFloat;
+    DX11EffectVector3 m_CameraPositionVector;
+    DX11EffectVector3 m_LightDirectionVector;
+    DX11EffectVector3 m_AmbientColorVector;
+    DX11EffectVector3 m_LightColorVector;
+    DX11EffectBool m_UseSpecularBool;
+    DX11EffectBool m_UseHalfLambertBool;
+    DX11EffectBool m_UseNormalMapBool;
+    DX11EffectBool m_FlipGreenChannelBool;
+    DX11EffectBool m_RemapNormalRangeBool;
+    DX11EffectBool m_UseCookTorranceBool;
+    DX11EffectBool m_UseCombustionModulation;
 };

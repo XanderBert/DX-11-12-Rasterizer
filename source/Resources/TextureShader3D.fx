@@ -1,26 +1,30 @@
 //Static variables
-const static bool gUseSpecularPhong = true;
-const static bool gUseSpecularBlinn = false;
+const static float gPi  = 3.14159265359;
 const static bool gUseTextureSpecularIntensity = true;
 const static float3 gColorSpecular = float3(1,1,1);
 
-const static bool gFlipGreenChannel = false;
+//ImGui Variables
+extern float gTime = 0.0;
+extern float gContrast = float(1.0);
+extern bool gCombustionModulation = true;
+extern bool gUseHalfLambert = true;
+extern bool gUseSpecularPhong = true;
+extern bool gUseTextureNormal = true;
+extern bool gFlipGreenChannel = false;
+extern bool gRemapNormal = false;
+extern bool gUseCookTorrance = false;
+extern float gShininess = 25.0f;
+extern float gLightIntensity : LightIntensity = float(7.0);
+extern float3 gLightDirection : LightDirection = float3(0.577f, -0.577f, 0.577f);
+extern float3 gAmbientColor : AmbientColor = float3(0.03, 0.03, 0.03);
+extern float3 gLightColor : LightColor = float3(1,1,1);
 
-const static bool gUseHalfLambert = true;
-const static bool gUseCookTorrance = false;
-
-const static float3 gLightColor : LightColor = float3(1,1,1);
-const static float gPi  = 3.14159265359;
-const static float gShininess = 1.25f;
-
+//Matrices
+extern float4x4 gWorldViewProj : WorldViewProjection;
+extern float4x4 gWorldmatrix : WorldMatrix;
+extern float3 gCameraPosition : Camera;
 
 //Should be grouped in a constant buffer
-uniform extern float3 gLightDirection : LightDirection = float3(0.577f, -0.577f, 0.577f);
-bool gUseTextureNormal = false;
-uniform extern float4x4 gWorldViewProj : WorldViewProjection;
-uniform extern float4x4 gWorldmatrix : WorldMatrix;
-uniform extern float3 gCameraPosition : Camera;
-
 //Textures
 uniform extern Texture2D gDiffuseMap : DiffuseMap;
 uniform extern Texture2D gNormalMap : NormalMap;
@@ -119,11 +123,11 @@ float3 CalculateSpecularBlinn(float3 viewDirection, float3 normal)
 	//Specular = |H| * |N| * Cos(Theta) = Dot(H, N)
 	
 	//Calculate the halfvector
-   	float3 halfVector = normalize(viewDirection + gLightDirection);
+   	float3 halfVector = normalize(viewDirection + normalize(gLightDirection));
 	
 	//Calculate the specular value
 	float specularValue = saturate(dot(normal, halfVector));
-	
+
 	//Return SpecularValue
 	return float3(specularValue, specularValue, specularValue);
 }
@@ -131,10 +135,10 @@ float3 CalculateSpecularBlinn(float3 viewDirection, float3 normal)
 float3 CalculateSpecularPhong(float3 viewDirection, float3 normal)
 {	
 	//Calculate the refelection
-	float3 reflectionDirection = reflect(-gLightDirection, normal);
+	float3 reflectionDirection = reflect(-normalize(gLightDirection), normal);
 	
 	//Calculate the specular value
-	float specularValue = saturate(dot(reflectionDirection, viewDirection));
+	float specularValue = saturate(dot(viewDirection, reflectionDirection));
 	
 	//Return specularValue
 	return float3(specularValue, specularValue, specularValue);
@@ -144,13 +148,18 @@ float3 CalculateSpecular(float3 viewDirection, float3 normal, float2 texCoord)
 {	
 	float3 specularValue = float3(0, 0, 0);
 
-	if(gUseSpecularPhong) specularValue = CalculateSpecularPhong(viewDirection, normal);
-	if(gUseSpecularBlinn) specularValue = CalculateSpecularBlinn(viewDirection, normal);
-	
+	if(gUseSpecularPhong)
+	{
+		specularValue = CalculateSpecularPhong(viewDirection, normal);
+	}else
+	{
+ 		specularValue = CalculateSpecularBlinn(viewDirection, normal);
+	}
+
+
 	//Tone Down on the refelctions with the power of the glossiness map
 	float specularExp = gShininess * gGlossinessMap.Sample(gSampler, texCoord).r;
-
-  	float specularPower = pow(specularValue, specularExp).r;
+  	float3 specularPower = pow(specularValue, float3(specularExp, specularExp, specularExp));
 	
 	if(gUseTextureSpecularIntensity)
 	{
@@ -171,15 +180,20 @@ float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
 	if(gUseTextureNormal)
 	{
 		float3 normalMap = gNormalMap.Sample(gSampler, texCoord).rgb;
-	
-		newNormal.x = 2 * normalMap.x - 1;
-		newNormal.y = 2 * normalMap.y - 1;
-		newNormal.z = 2 * normalMap.z - 1;
 
-		//newNormal.x =  normalMap.x ;
-		//newNormal.y =  normalMap.y ;
-		//newNormal.z =  normalMap.z ;
-		
+		//remap the normals in range [-1,1] if needed
+		if(gRemapNormal)
+		{
+			newNormal.x = 2 * normalMap.x - 1;
+			newNormal.y = 2 * normalMap.y - 1;
+			newNormal.z = 2 * normalMap.z - 1;	
+		}
+		else
+		{
+			newNormal = normalMap;
+		}
+	
+		//flip the x axis if needed
 		if(gFlipGreenChannel) newNormal.x = -newNormal.x;
 	}
 
@@ -189,11 +203,11 @@ float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
 
 float3 CalculateCookTorrance(float3 normal, float3 viewDir, float3 lightDir, float roughness, float metallic, float3 albedo, float3 F0)
 {
-    float3 H = normalize(lightDir + viewDir);
-    float NdotH = max(dot(normal, H), 0.0);
-    float NdotV = max(dot(normal, viewDir), 0.0);
-    float NdotL = max(dot(normal, lightDir), 0.0);
-    float VdotH = max(dot(viewDir, H), 0.0);
+	float3 H = normalize(lightDir + viewDir);
+	float NdotH = max(dot(normalize(normal), H), 0.0);
+	float NdotV = max(dot(normalize(normal), normalize(viewDir)), 0.0);
+	float NdotL = max(dot(normalize(normal), normalize(lightDir)), 0.0);
+	float VdotH = max(dot(normalize(viewDir), H), 0.0);
 
     // Geometric attenuation
     float a = roughness * roughness;
@@ -201,9 +215,9 @@ float3 CalculateCookTorrance(float3 normal, float3 viewDir, float3 lightDir, flo
     float G = 2.0 / (1.0 + sqrt(1.0 + a2 * (1.0 - NdotV * NdotV) / (NdotV * NdotV)));
 
     // Roughness (or microfacet distribution)
-    float D = exp((NdotH * NdotH - 1.0) / (a2 * NdotH * NdotH)) / (3.14159 * a2 * NdotH * NdotH * NdotH * NdotH);
+    float D = exp((NdotH * NdotH - 1.0) / (a2 * NdotH * NdotH)) / (gPi * a2 * NdotH * NdotH * NdotH * NdotH);
 
-    // Fresnel
+    // Fresnel Schlick 
     float3 F = F0 + (1.0 - F0) * pow(1.0 - VdotH, 5.0);
 
     // Specular
@@ -212,10 +226,10 @@ float3 CalculateCookTorrance(float3 normal, float3 viewDir, float3 lightDir, flo
     float3 spec = (D * G * F) / (4.0 * NdotL * NdotV + 0.001); // prevent divide by zero
 
     // Add to diffuse the light
-    float3 diffColor = kD * albedo / 3.14159;
+    float3 diffColor = kD * albedo / gPi;
     float3 specColor = spec;
 
-    return diffColor + specColor;
+    return saturate(diffColor * gLightIntensity + specColor);
 }
 
 float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection)
@@ -224,19 +238,19 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection)
 	float3 diffColor = gDiffuseMap.Sample(gSampler, texCoord).rgb;
 	
 
-	
 	if(gUseCookTorrance)
 	{
 		// Get the roughness, metallic, and ao from their respective maps
-    	//float roughness = gRoughnessMap.Sample(gSampler, texCoord).r;
-		float roughness = 0.5;
-    	//float metallic = gMetallicMap.Sample(gSampler, texCoord).r;
-		float metallic = 0.5;
+    	//float roughness = gRoughnessMap.Sample(gSampler, texCoord).r;		
+		//float metallic = 0.5;
+		float roughness = gGlossinessMap.Sample(gSampler, texCoord).r;
+		float metallic = 0.0;
+
     	//float ao = gAOMap.Sample(gSampler, texCoord).r;
 
 		// Calculate the Cook-Torrance BRDF
 		float3 F0 = float3(0.04, 0.04, 0.04); // F0 for dielectrics
-		float3 bdrf = CalculateCookTorrance(normal, viewDirection, gLightDirection, roughness, metallic, diffColor, F0);
+		float3 bdrf = CalculateCookTorrance(normal, viewDirection, normalize(gLightDirection), roughness, metallic, diffColor, F0);
 		bdrf *= normalize(gLightColor);
 		//bdrf *= ao;
 
@@ -246,17 +260,16 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection)
 	
 	//Calculate the strenght with the angle beween light and normal
 	//use saturate() to clamp that value between [0, 1]
-	float diffuseStrength = saturate(dot(normal, gLightDirection));
+	float diffuseStrength = saturate(dot(normal, normalize(gLightDirection)));
 	
 	//Calculate the half lambert
 	float3 lambert = pow(diffuseStrength * 0.5 + 0.5, 2.0);
-
 	if(!gUseHalfLambert) lambert = diffuseStrength / gPi;
 	
 	//Calculate the diffuse color
     diffColor = diffColor * lambert;
 	
-	return diffColor;
+	return diffColor * gLightIntensity + gAmbientColor;
 }
 
 
@@ -285,7 +298,7 @@ VertexShaderOutput VS(VertexShaderInput input)
 void CalculateViewDirection(float3 worldPos, out float3 viewDirection)
 {
 	float3 invViewDirection = normalize(gCameraPosition - worldPos);
-	viewDirection = invViewDirection;
+	viewDirection = -invViewDirection;
 }
 
 
@@ -308,8 +321,7 @@ float4 PS(VertexShaderOutput pixelShaderInput) : SV_TARGET
 
 	//SPECULAR
 	float3 specColor = CalculateSpecular(viewDirection, newNormal, pixelShaderInput.TexCoord);
-	
-		
+			
 	//DIFFUSE
 	float3 diffColor = CalculateDiffuse(newNormal, pixelShaderInput.TexCoord,  viewDirection);
 
@@ -317,9 +329,7 @@ float4 PS(VertexShaderOutput pixelShaderInput) : SV_TARGET
 	float3 finalColor = diffColor + specColor;
 	
 	//add more contrast
-	finalColor = pow(abs(finalColor), 1.8f);
-
-
+	finalColor = saturate(pow(abs(finalColor), gContrast));
 	return float4(finalColor, 1.f);
 }
 
@@ -332,8 +342,14 @@ float4 PSFlat(VertexShaderOutput pixelShaderInput) : SV_TARGET
 	//Just sample the texture and return it
 	float4 finalColor =  gFireEffectMap.Sample(gSampler, pixelShaderInput.TexCoord);
 
-	//add more contrast
-	finalColor = pow(abs(finalColor), 1.8f);
+
+	float contrast = gContrast;
+	if(gCombustionModulation)
+	{
+		contrast += (sin(gTime * 8.f)) / 1.4f;
+	}
+
+	finalColor = pow(abs(finalColor), contrast);
 
 	return float4(finalColor);
 }

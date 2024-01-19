@@ -28,7 +28,8 @@
 #include <d3dcompiler.h>
 #include <d3dx11effect.h>
 
-
+//Custom Wraper for effect variables
+#include "Dx11EffectVariables.h"
 
 
 
