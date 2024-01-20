@@ -28,10 +28,10 @@ namespace dae
         void Update(const Timer* pTimer);
 
         
-        Matrix GetViewMatrix() const;
+        Matrix GetViewMatrix();
         Matrix GetProjectionMatrix() const;
-        Matrix GetViewInverseMatrix() const { return Matrix::Inverse(GetViewMatrix()); }
-        Matrix GetViewProjectionMatrix() const { return GetViewMatrix() * GetProjectionMatrix(); }
+        Matrix GetViewInverseMatrix() { return Matrix::Inverse(GetViewMatrix()); }
+       Matrix GetViewProjectionMatrix() { return GetViewMatrix() * GetProjectionMatrix(); }
         
 
         Vector3 GetPosition() const { return m_Origin; }

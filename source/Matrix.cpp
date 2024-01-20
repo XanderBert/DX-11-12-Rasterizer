@@ -147,15 +147,12 @@ namespace dae {
 	//Returns a left-handed look-at matrix (Inverse View Matrix)
 	Matrix Matrix::CreateLookAtLH(const Vector3& origin, const Vector3& forward, const Vector3& right)
 	{
-		right;
-		Vector3 zAxis = forward.Normalized(); // Forward vector
-		Vector3 xAxis = Vector3::Cross(Vector3::UnitY, zAxis).Normalized(); // Right vector
-		Vector3 yAxis = Vector3::Cross(zAxis, xAxis); // Up vector
+		Vector3 yAxis = Vector3::Cross(forward, right); // Up vector
 		
 		return {
-			xAxis,
+			right,
 			yAxis,
-			zAxis,
+			forward,
 			origin };
 	}
 

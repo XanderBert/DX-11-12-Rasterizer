@@ -59,16 +59,16 @@ namespace dae
 		direction *= 1.0f + pKeyboardState[SDL_SCANCODE_LSHIFT] * (shiftSpeed - 1.0f);
 
 		m_Origin += direction;
-
-		// // Calculate the new forward vector with the new pitch and yaw
-    	const Matrix rotationMatrix = Matrix::CreateRotationY(m_Yaw) *  Matrix::CreateRotationX(m_Pitch);
-
-    	m_Forward = rotationMatrix.TransformVector(Vector3::UnitZ).Normalized();
-    	m_Right = Vector3::Cross(Vector3::UnitY, m_Forward).Normalized();
     }
 
-    Matrix Camera::GetViewMatrix() const
+    Matrix Camera::GetViewMatrix() 
     {
+    	// // Calculate the new forward vector with the new pitch and yaw
+    	const Matrix rotationMatrix = Matrix::CreateRotationX(m_Pitch) * Matrix::CreateRotationY(m_Yaw);
+    	m_Forward = rotationMatrix.TransformVector(Vector3::UnitZ).Normalized();
+    	m_Right = Vector3::Cross(Vector3::UnitY, m_Forward).Normalized();
+
+    	
     	//Get the inverseViewMatrix
     	const Matrix lookAt = Matrix::CreateLookAtLH(m_Origin, m_Forward, m_Right);
 
