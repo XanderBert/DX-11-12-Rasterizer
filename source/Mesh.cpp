@@ -187,8 +187,7 @@ void Mesh::Update(const dae::Timer* pTimer,const dae::Matrix& viewProjectionMatr
     //Rotate the mesh
     if(m_RotationEnabled)
     {
-        //TODO: 40deg/s
-        const dae::Matrix rotationMatrix = dae::Matrix::CreateRotationY((pTimer->GetElapsed() * dae::TO_RADIANS * 5.f));
+        const dae::Matrix rotationMatrix = dae::Matrix::CreateRotationY((pTimer->GetElapsed() * dae::TO_RADIANS * 45.f));
         m_WorldMatrix *= rotationMatrix;
     }
 
