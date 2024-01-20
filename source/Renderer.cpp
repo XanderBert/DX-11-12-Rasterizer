@@ -339,7 +339,7 @@ namespace dae {
 		swapChain1Desc.Width = m_Width;
 		swapChain1Desc.Height = m_Height;
 		swapChain1Desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;									// 32 bits, 8 bits per channel
-		swapChain1Desc.SampleDesc.Count = 1;													// No anti-aliasing
+		swapChain1Desc.SampleDesc.Count = 1;												// No anti-aliasing
 		swapChain1Desc.SampleDesc.Quality = 0;												// No anti-aliasing
 		swapChain1Desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;						// Use the buffer as a render target
 		swapChain1Desc.BufferCount = 2;														// 2 buffers

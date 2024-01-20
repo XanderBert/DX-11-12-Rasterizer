@@ -219,33 +219,33 @@ float3 CalculateCookTorrance(float3 normal, float3 viewDir, float3 lightDir, flo
 	float NdotH = saturate(dot(n, H));
 	float LdotH = saturate(dot(ld, H));
 
-	half NdotHSqr = NdotH * NdotH;
+	float NdotHSqr = NdotH * NdotH;
 
 	// Roughness
-    half roughness2   = -roughness;
-    half roughnessSqr = roughness2 * roughness2;
+    float roughness2   = -roughness;
+    float roughnessSqr = roughness2 * roughness2;
 
 
-	// Oren-Nayar
+	//Nayar
 	//https://en.wikipedia.org/wiki/Oren%E2%80%93Nayar_reflectance_model
 	//Oren-Nayar BRDF is an improvement over the theoretical Lambertian model, applying distribution of purely diffuse microfacets.
-	half A = 1.0 - 0.5 * (roughnessSqr / (roughnessSqr + 0.33));
-    half B = 0.45 * (roughnessSqr / (roughnessSqr + 0.09));
-    half C = saturate(dot(normalize(vd - n * NdotV), normalize(ld - n * NdotL)));
-    half angleL = acos(NdotL);
-    half angleV = acos(NdotV);
-    half alpha  = max(angleL, angleV);
-    half beta   = min(angleL, angleV);
+	float A = 1.0 - 0.5 * (roughnessSqr / (roughnessSqr + 0.33));
+    float B = 0.45 * (roughnessSqr / (roughnessSqr + 0.09));
+    float C = saturate(dot(normalize(vd - n * NdotV), normalize(ld - n * NdotL)));
+    float angleL = acos(NdotL);
+    float angleV = acos(NdotV);
+    float alpha  = max(angleL, angleV);
+    float beta   = min(angleL, angleV);
     float3 diffuse = saturate(albedo.rgb * (A + B * C * sin(alpha) * tan(beta)) * gLightColor.rgb * NdotL);
 
 
 	// Cook-Torrance
-    half D = roughnessSqr / (gPi * pow(NdotHSqr * (roughnessSqr - 1.0) + 1.0, 2.0));
-    half k  = roughness2 * 0.5;
-	half gl = NdotL / (NdotL * (1.0 - k) + k);
-    half gv = NdotV / (NdotV * (1.0 - k) + k);
-    half G = gl * gv;
-    half F = metallic + (1.0 - metallic) * pow(1.0 - LdotH, 5.0);
+    float D = roughnessSqr / (gPi * pow(NdotHSqr * (roughnessSqr - 1.0) + 1.0, 2.0));
+    float k  = roughness2 * 0.5;
+	float gl = NdotL / (NdotL * (1.0 - k) + k);
+    float gv = NdotV / (NdotV * (1.0 - k) + k);
+    float G = gl * gv;
+    float F = metallic + (1.0 - metallic) * pow(1.0 - LdotH, 5.0);
     float3 specular = saturate((D * G * F) / (4.0 * NdotV)) * gPi * gLightColor.rgb;
 
 	//Use the specularMap 
@@ -271,7 +271,7 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection, fl
 		// Get the roughness, metallic, and ao from their respective maps
 		float roughness = gGlossinessMap.Sample(gSampler, texCoord).r;
 
-		
+
 		//Should be 0 or 1 in a map but i don't have a map. So i just set it to 0.85
 		float metallic = 0.85;
     	//float ao = gAOMap.Sample(gSampler, texCoord).r;
