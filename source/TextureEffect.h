@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <functional>
 #include <map>
-
 #include "Dx11EffectVariables.h"
 #include "PosCol3DEffect.h"
 
@@ -81,7 +80,7 @@ public:
 
     void SetTextureMap(TextureType type, ID3D11ShaderResourceView* pResourceView) const;
 
-    void Update(float elapsedSec, const dae::Matrix* worldMatrix, const dae::Vector3& cameraPosition); 
+    void Update(float totalTime, const dae::Matrix* worldMatrix, const dae::Matrix* worldViewProjectionMatrix, const dae::Vector3& cameraPosition); 
     
     void IncrementFilter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
     static std::string GetCurrentSamplerType();
@@ -112,7 +111,7 @@ public:
     DX11EffectBool* GetUseCombustionModulationBool() {return &m_UseCombustionModulation; }
     
     DX11EffectFloat* GetShininessFloat() {return &m_ShininessFloat; }
-    DX11EffectFloat* GetLightIntensityFloat() {return &m_ShininessFloat; }
+    DX11EffectFloat* GetLightIntensityFloat() {return &m_LightIntensityFloat; }
     DX11EffectFloat* GetContrastFloat() {return &m_ContrastFloat; }
 
 

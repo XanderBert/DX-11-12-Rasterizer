@@ -49,7 +49,7 @@ namespace dae {
 		static Matrix Inverse(const Matrix& m);
 		static Matrix Identity();
 
-		static Matrix CreateLookAtLH(const Vector3& origin, const Vector3& forward);
+		static Matrix CreateLookAtLH(const Vector3& origin, const Vector3& forward, const Vector3& right);
 		static Matrix CreatePerspectiveFovLH(float fovy, float aspect, float zn, float zf);
 
 		Vector4& operator[](int index);

@@ -19,6 +19,7 @@ TextureEffect::TextureEffect(ID3D11Device* pDevice, const std::wstring& assetFil
 , m_TimeFloat(m_pEffect, "gTime", 0.f)
 , m_UseCombustionModulation(m_pEffect, "gCombustionModulation", true)
 
+
 {
     //Diffuse map
     m_pDiffuseMapVariable = m_pEffect->GetVariableByName("gDiffuseMap")->AsShaderResource();
@@ -105,11 +106,11 @@ void TextureEffect::SetTextureMap(TextureType type, ID3D11ShaderResourceView* pR
     }
 }
 
-void TextureEffect::Update(float totalTime, const dae::Matrix* worldMatrix, const dae::Vector3& cameraPosition)
+void TextureEffect::Update(float totalTime, const dae::Matrix* worldMatrix, const dae::Matrix* worldViewProjectionMatrix, const dae::Vector3& cameraPosition)
 {
     SetWorldMatrix(worldMatrix);
     SetCameraPosition(cameraPosition);
-
+    SetWorldViewProjectionMatrix(worldViewProjectionMatrix);
     //Update Time    
     m_TimeFloat.Set(totalTime);
 }

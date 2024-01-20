@@ -201,38 +201,67 @@ float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
 }
 
 
-float3 CalculateCookTorrance(float3 normal, float3 viewDir, float3 lightDir, float roughness, float metallic, float3 albedo, float3 F0)
+float3 CalculateCookTorrance(float3 normal, float3 viewDir, float3 lightDir, float roughness, float metallic, float3 albedo, float3 F0, float3 specularColor)
 {
-	float3 H = normalize(lightDir + viewDir);
-	float NdotH = max(dot(normalize(normal), H), 0.0);
-	float NdotV = max(dot(normalize(normal), normalize(viewDir)), 0.0);
-	float NdotL = max(dot(normalize(normal), normalize(lightDir)), 0.0);
-	float VdotH = max(dot(normalize(viewDir), H), 0.0);
+	float3 n = normalize(normal);
+	float3 ld = normalize(lightDir);
+	float vd = normalize(viewDir);
+
+	float NdotL = saturate(dot(n, ld));
+	float Rs = 1000.0f;
+	if(NdotL > 0.0f)
+	{
+		float3 H = normalize(ld + vd);
+		float NdotH = saturate(dot(n, H));
+		float NdotV = saturate(dot(n, vd));
+		//TODO: ld or vd?
+		float VdotH = saturate(dot(ld, H));
+
+ 		// Fresnel Schlick 
+    	float3 F = F0 + (1.0 - F0) * pow(1.0 - VdotH, 5.0);
+
+		// Microfacet distribution by Beckmann
+		float m_squared = roughness * roughness;
+		float r1 = 1.0 / (4.0 * m_squared * pow(NdotH, 4.0));
+		float r2 = (NdotH * NdotH - 1.0) / (m_squared * NdotH * NdotH);
+		float D = r1 * exp(r2);
+
+		// Geometric shadowing
+		float two_NdotH = 2.0 * NdotH;
+		float g1 = (two_NdotH * NdotV) / VdotH;
+		float g2 = (two_NdotH * NdotL) / VdotH;
+		float G = min(1.0, min(g1, g2));
+
+		Rs = (F * D * G) / (gPi * NdotL * NdotV);
+	}
+
+
+
 
     // Geometric attenuation
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float G = 2.0 / (1.0 + sqrt(1.0 + a2 * (1.0 - NdotV * NdotV) / (NdotV * NdotV)));
+    //float a = roughness * roughness;
+    //float a2 = a * a;
+    //float G = 2.0 / (1.0 + sqrt(1.0 + a2 * (1.0 - NdotV * NdotV) / (NdotV * NdotV)));
 
     // Roughness (or microfacet distribution)
-    float D = exp((NdotH * NdotH - 1.0) / (a2 * NdotH * NdotH)) / (gPi * a2 * NdotH * NdotH * NdotH * NdotH);
+    //float D = exp((NdotH * NdotH - 1.0) / (a2 * NdotH * NdotH)) / (gPi * a2 * NdotH * NdotH * NdotH * NdotH);
 
-    // Fresnel Schlick 
-    float3 F = F0 + (1.0 - F0) * pow(1.0 - VdotH, 5.0);
+   
 
     // Specular
-    float3 kS = F;
-    float3 kD = (1.0 - kS) * (1.0 - metallic);
-    float3 spec = (D * G * F) / (4.0 * NdotL * NdotV + 0.001); // prevent divide by zero
+    //float3 kS = F;
+    //float3 kD = (1.0 - kS) * (1.0 - metallic);
+    //float3 spec = (D * G * F) / (4.0 * NdotL * NdotV + 0.001); // prevent divide by zero
 
     // Add to diffuse the light
-    float3 diffColor = kD * albedo / gPi;
-    float3 specColor = spec;
+	float k = metallic;
+    float3 diffColor = albedo * gLightColor * NdotL + gLightColor * specularColor / gPi * NdotL * (k + Rs * (1.0 - k));
+    //float3 specColor = spec;
 
-    return saturate(diffColor * gLightIntensity + specColor);
+    return saturate(diffColor * gLightIntensity);
 }
 
-float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection)
+float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection, float3 specularColor)
 {
 	//Get the diffuse color from the diffuse map
 	float3 diffColor = gDiffuseMap.Sample(gSampler, texCoord).rgb;
@@ -250,7 +279,7 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection)
 
 		// Calculate the Cook-Torrance BRDF
 		float3 F0 = float3(0.04, 0.04, 0.04); // F0 for dielectrics
-		float3 bdrf = CalculateCookTorrance(normal, viewDirection, normalize(gLightDirection), roughness, metallic, diffColor, F0);
+		float3 bdrf = CalculateCookTorrance(normal, viewDirection, normalize(gLightDirection), roughness, metallic, diffColor, F0, specularColor);
 		bdrf *= normalize(gLightColor);
 		//bdrf *= ao;
 
@@ -269,7 +298,7 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection)
 	//Calculate the diffuse color
     diffColor = diffColor * lambert;
 	
-	return diffColor * gLightIntensity + gAmbientColor;
+	return diffColor * gLightIntensity + gAmbientColor + specularColor;
 }
 
 
@@ -322,11 +351,11 @@ float4 PS(VertexShaderOutput pixelShaderInput) : SV_TARGET
 	//SPECULAR
 	float3 specColor = CalculateSpecular(viewDirection, newNormal, pixelShaderInput.TexCoord);
 			
-	//DIFFUSE
-	float3 diffColor = CalculateDiffuse(newNormal, pixelShaderInput.TexCoord,  viewDirection);
+	//DIFFUSE + SPECULAR
+	float3 diffColor = CalculateDiffuse(newNormal, pixelShaderInput.TexCoord,  viewDirection, specColor);
 
 	//FINAL COLOR
-	float3 finalColor = diffColor + specColor;
+	float3 finalColor = diffColor;
 	
 	//add more contrast
 	finalColor = saturate(pow(abs(finalColor), gContrast));
@@ -341,15 +370,21 @@ float4 PSFlat(VertexShaderOutput pixelShaderInput) : SV_TARGET
 {
 	//Just sample the texture and return it
 	float4 finalColor =  gFireEffectMap.Sample(gSampler, pixelShaderInput.TexCoord);
-
+	//finalColor = saturate(float4(gAmbientColor, 1.0f) + finalColor);
 
 	float contrast = gContrast;
 	if(gCombustionModulation)
 	{
-		contrast += (sin(gTime * 8.f)) / 1.4f;
+		//Making the less predicible by making a wave like pattern
+		//Idea from: https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-18-using-vertex-texture-displacement
+		float wave1 = (sin(gTime * 8.f)) * 2.0f;
+		float wave2 = (sin(gTime * 4.f + wave1)) / 1.5f;
+		float wave3 = (sin(gTime * 8.f + wave2)) / 1.2f;
+
+		contrast += wave3;
 	}
 
-	finalColor = pow(abs(finalColor), contrast);
+	finalColor = saturate(pow(abs(finalColor), max(contrast, 0.0f)));
 
 	return float4(finalColor);
 }

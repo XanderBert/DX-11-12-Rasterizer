@@ -1,11 +1,10 @@
 ﻿#include "pch.h"
 #include "Mesh.h"
-
 #include <ranges>
-
 #include "PosCol3DEffect.h"
 #include "Texture.h"
 #include "Utils.h"
+
 
 Mesh::Mesh(ID3D11Device* pDevice, const std::vector<Vertex>& vertices,const  std::vector<uint32_t>& indices)
     : m_NumIndices(static_cast<uint32_t>(indices.size()))
@@ -183,23 +182,21 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
     }
 }
 
-void Mesh::Update(const dae::Timer* pTimer, dae::Matrix* worldProjectionMatrix, dae::Matrix* viewInverseMatrix, dae::Vector3* cameraPosition)
+void Mesh::Update(const dae::Timer* pTimer,const dae::Matrix& viewProjectionMatrix,const dae::Vector3& cameraPosition)
 {
-    assert(worldProjectionMatrix != nullptr && "Mesh::Update() -> worldViewProjectionMatrix is nullptr!");
-    assert(viewInverseMatrix != nullptr && "Mesh::Update() -> viewInverseMatrix is nullptr!");
-    
+    //Rotate the mesh
     if(m_RotationEnabled)
     {
+        //TODO: 40deg/s
         const dae::Matrix rotationMatrix = dae::Matrix::CreateRotationY((pTimer->GetElapsed() * dae::TO_RADIANS * 5.f));
         m_WorldMatrix *= rotationMatrix;
     }
 
-    //TODO calculate this in the camera and pass it allong.
-    const dae::Matrix worldViewPorjectionMatrix = m_WorldMatrix * (*worldProjectionMatrix);
-    m_pEffect->Update(pTimer->GetTotal(), &m_WorldMatrix, *cameraPosition);
+    //Create WorldViewProjectionMatrix
+    const dae::Matrix worldViewPorjectionMatrix = m_WorldMatrix * viewProjectionMatrix;
 
-    //todo make the uptdate function of the effect interface to be overriden
-    m_pEffect->SetWorldViewProjectionMatrix(&worldViewPorjectionMatrix);
+    //Update the effect    
+    m_pEffect->Update(pTimer->GetTotal(), &m_WorldMatrix,&worldViewPorjectionMatrix, cameraPosition);
 }
 
 void Mesh::CreateTexture(const std::string& assetLocation, ID3D11Device* pDevice, Texture*& pTexture)
@@ -226,7 +223,7 @@ void Mesh::SetupPartialCoverageEffect(ID3D11Device* pDevice)
     std::vector<uint32_t> fireIndices{};
 
     //Load the fire mesh
-    dae::Utils::ParseOBJ("Resources/fireFX.obj", fireVertices, fireIndices, false);
+    dae::Utils::ParseOBJ("Resources/fireFX.obj", fireVertices, fireIndices, true);
     
     // Vertex Buffer
     D3D11_BUFFER_DESC bufferDescription{};

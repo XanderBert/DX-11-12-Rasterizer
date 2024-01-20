@@ -1,5 +1,12 @@
 #pragma once
 #define USE_DIRECTX12 0
+
+//i currently dont have ImGui working with DirectX12
+#if USE_DIRECTX12
+    #define IMGUI_DISABLE
+#endif
+
+
 //#define IMGUI_DISABLE  
 
 

@@ -8,7 +8,6 @@ pInterface->Release();\
 pInterface = nullptr;\
 }
 
-
 #define SafeDelete(pObject)\
 static_assert(std::is_pointer<decltype(pObject)>::value, "SafeDelete requires a pointer");\
 if(pObject != nullptr)\
@@ -16,7 +15,6 @@ if(pObject != nullptr)\
 delete pObject;\
 pObject = nullptr;\
 }
-
 
 //Hr result macro
 #define ReturnOnFail(hr) if(FAILED(hr)) return hr;

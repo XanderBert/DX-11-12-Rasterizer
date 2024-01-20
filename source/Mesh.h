@@ -25,7 +25,7 @@ public:
     Mesh& operator=(Mesh&&) noexcept = delete;
     
     void Render(ID3D11DeviceContext* pDeviceContext) const;
-    void Update(const dae::Timer* pTimer, dae::Matrix* worldViewProjectionMatrix, dae::Matrix* viewInverseMatrix, dae::Vector3* cameraPosition);
+    void Update(const dae::Timer* pTimer,const dae::Matrix& viewProjectionMatrix, const dae::Vector3& cameraPosition);
     
     
     void SetTextureMap(const std::string& assetLocation, ID3D11Device* pDevice, TextureType type);

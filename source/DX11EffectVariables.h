@@ -1,6 +1,12 @@
 #pragma once
 #include "Vector3.h"
 
+// namespace dae
+// {
+//     struct Vector3;
+// }
+
+
 class DX11EffectBool final
 {
 

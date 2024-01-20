@@ -30,19 +30,10 @@ namespace dae
 		direction -= (pKeyboardState[SDL_SCANCODE_Q] || pKeyboardState[SDL_SCANCODE_A]) * m_Right * keyboardMovementSpeed * deltaTime;
 		direction += pKeyboardState[SDL_SCANCODE_D] * m_Right * keyboardMovementSpeed * deltaTime;
 
-		// Calculate new position and rotation with mouse inputs
-
-		//bool isLeftConsumed = ImGui::GetIO().MouseDown[0];
-		//bool isRightConsumed = ImGui::GetIO().MouseDown[1];
-
-		//check if the mouse is inside the imGui window
-		//ImVec2 winPos = ImGui::GetCurrentWindow()->Pos;
-    	//ImVec2 winSize = ImGui::GetCurrentWindow()->Size;
-    	//bool isOverWindow = ImGui::IsMouseHoveringRect(winPos, ImVec2(winPos.x + winSize.x, winPos.y + winSize.y));
-
 #ifndef IMGUI_DISABLE  
     	if(!ImGui::GetIO().WantCaptureMouse)
 #endif
+		// Calculate new position and rotation with mouse inputs
     	{
     		switch (mouseState)
     		{
@@ -69,25 +60,17 @@ namespace dae
 
 		m_Origin += direction;
 
-		// // Calculate the rotation matrix with the new pitch and yaw
-		// const Matrix rotationMatrix = Matrix::CreateRotationX(m_Pitch) * Matrix::CreateRotationY(m_Yaw);
-		//
 		// // Calculate the new forward vector with the new pitch and yaw
-	
+    	const Matrix rotationMatrix = Matrix::CreateRotationY(m_Yaw) *  Matrix::CreateRotationX(m_Pitch);
+
+    	m_Forward = rotationMatrix.TransformVector(Vector3::UnitZ).Normalized();
+    	m_Right = Vector3::Cross(Vector3::UnitY, m_Forward).Normalized();
     }
 
-    Matrix Camera::GetViewMatrix()
+    Matrix Camera::GetViewMatrix() const
     {
-    	
-    	const Matrix rotationMatrix = Matrix::CreateRotationX(m_Pitch) * Matrix::CreateRotationY(m_Yaw);
-    	m_Forward = rotationMatrix.TransformVector(Vector3::UnitZ);
-    	
-    	//Update the right vector
-    	m_Right = Vector3::Cross(Vector3::UnitY, m_Forward).Normalized();
-
-    	
     	//Get the inverseViewMatrix
-    	const Matrix lookAt = Matrix::CreateLookAtLH(m_Origin, m_Forward);
+    	const Matrix lookAt = Matrix::CreateLookAtLH(m_Origin, m_Forward, m_Right);
 
     	//Return the inverse of the inverseViewMatrix
     	return Matrix::Inverse(lookAt);

@@ -55,14 +55,7 @@ namespace dae {
 	void Renderer::Update(const Timer* pTimer)
 	{
 		m_pCamera->Update(pTimer);
-
-		
-		Matrix worldViewProjectionMatrix = m_pCamera->GetViewMatrix() * m_pCamera->GetProjectionMatrix();
-		Matrix viewInverseMatrix = m_pCamera->GetViewInverseMatrix();
-		Vector3 cameraPosition = m_pCamera->GetPosition();
-
-		
-		m_pMesh->Update(pTimer,&worldViewProjectionMatrix, &viewInverseMatrix, &cameraPosition);
+		m_pMesh->Update(pTimer,m_pCamera->GetViewProjectionMatrix(), m_pCamera->GetPosition());
 	}
 
 	void Renderer::OnImGuiRender()

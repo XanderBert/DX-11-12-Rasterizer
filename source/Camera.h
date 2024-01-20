@@ -28,12 +28,14 @@ namespace dae
         void Update(const Timer* pTimer);
 
         
-        Matrix GetViewMatrix();
+        Matrix GetViewMatrix() const;
         Matrix GetProjectionMatrix() const;
-        Matrix GetViewInverseMatrix() { return Matrix::Inverse(GetViewMatrix()); }
+        Matrix GetViewInverseMatrix() const { return Matrix::Inverse(GetViewMatrix()); }
+        Matrix GetViewProjectionMatrix() const { return GetViewMatrix() * GetProjectionMatrix(); }
+        
 
         Vector3 GetPosition() const { return m_Origin; }
-    
+        
         void SetFOV(float fov) { m_Fov = fov * (TO_RADIANS * 0.5f); }
         float GetFOV() const { return m_Fov; }
     
@@ -47,13 +49,11 @@ namespace dae
 
         float m_NearPlane = 0.1f;
         float m_FarPlane = 1000.f;
-
-
+        
         Vector3 m_Forward = { 0.f, 0.f, 1.f };
         Vector3 m_Right = { 1.f, 0.f, 0.f };
 
         float m_Pitch = 0.f;
         float m_Yaw = 0.f;
-    
     };
 }
