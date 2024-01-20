@@ -13,8 +13,8 @@ namespace dae
 		static bool ParseOBJ(const std::string& filename, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, bool flipAxisAndWinding = true)
 		{
 			std::ifstream file(filename);
-			if (!file)
-				return false;
+			
+			if (!file) return false;
 
 			std::vector<Vector3> positions{};
 			std::vector<Vector3> normals{};

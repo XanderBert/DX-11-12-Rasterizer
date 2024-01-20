@@ -123,7 +123,7 @@ float3 CalculateSpecularBlinn(float3 viewDirection, float3 normal)
 	//Specular = |H| * |N| * Cos(Theta) = Dot(H, N)
 	
 	//Calculate the halfvector
-   	float3 halfVector = normalize(viewDirection + normalize(gLightDirection));
+   	float3 halfVector = normalize(viewDirection + normalize(-gLightDirection));
 	
 	//Calculate the specular value
 	float specularValue = saturate(dot(normal, halfVector));
@@ -135,7 +135,7 @@ float3 CalculateSpecularBlinn(float3 viewDirection, float3 normal)
 float3 CalculateSpecularPhong(float3 viewDirection, float3 normal)
 {	
 	//Calculate the refelection
-	float3 reflectionDirection = reflect(-normalize(gLightDirection), normal);
+	float3 reflectionDirection = reflect(normalize(gLightDirection), normal);
 	
 	//Calculate the specular value
 	float specularValue = saturate(dot(viewDirection, reflectionDirection));
@@ -179,7 +179,11 @@ float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
 		
 	if(gUseTextureNormal)
 	{
-		float3 normalMap = gNormalMap.Sample(gSampler, texCoord).rgb;
+		const float3 binormal = cross(normal, tangent);
+		const float4x4 tangentSpaceAxis = float4x4(float4(tangent, 0.0f), float4(binormal, 0.0f), float4(normal, 0.0), float4(0.0f, 0.0f, 0.0f, 1.0f));
+
+		float3 normalMap = normalize(gNormalMap.Sample(gSampler, texCoord).rgb);
+
 
 		//remap the normals in range [-1,1] if needed
 		if(gRemapNormal)
@@ -195,6 +199,8 @@ float3 CalculateNormal(float3 tangent, float3 normal, float2 texCoord)
 	
 		//flip the x axis if needed
 		if(gFlipGreenChannel) newNormal.x = -newNormal.x;
+
+		newNormal = mul(float4(newNormal, 0.0f), tangentSpaceAxis);
 	}
 
 	return newNormal;
@@ -205,60 +211,53 @@ float3 CalculateCookTorrance(float3 normal, float3 viewDir, float3 lightDir, flo
 {
 	float3 n = normalize(normal);
 	float3 ld = normalize(lightDir);
-	float vd = normalize(viewDir);
+	float3 vd = normalize(viewDir);
+	float3 H = normalize(ld + vd);
 
 	float NdotL = saturate(dot(n, ld));
-	float Rs = 1000.0f;
-	if(NdotL > 0.0f)
-	{
-		float3 H = normalize(ld + vd);
-		float NdotH = saturate(dot(n, H));
-		float NdotV = saturate(dot(n, vd));
-		//TODO: ld or vd?
-		float VdotH = saturate(dot(ld, H));
+	float NdotV = saturate(dot(n, vd));
+	float NdotH = saturate(dot(n, H));
+	float LdotH = saturate(dot(ld, H));
 
- 		// Fresnel Schlick 
-    	float3 F = F0 + (1.0 - F0) * pow(1.0 - VdotH, 5.0);
+	half NdotHSqr = NdotH * NdotH;
 
-		// Microfacet distribution by Beckmann
-		float m_squared = roughness * roughness;
-		float r1 = 1.0 / (4.0 * m_squared * pow(NdotH, 4.0));
-		float r2 = (NdotH * NdotH - 1.0) / (m_squared * NdotH * NdotH);
-		float D = r1 * exp(r2);
-
-		// Geometric shadowing
-		float two_NdotH = 2.0 * NdotH;
-		float g1 = (two_NdotH * NdotV) / VdotH;
-		float g2 = (two_NdotH * NdotL) / VdotH;
-		float G = min(1.0, min(g1, g2));
-
-		Rs = (F * D * G) / (gPi * NdotL * NdotV);
-	}
+	// Roughness
+    half roughness2   = -roughness;
+    half roughnessSqr = roughness2 * roughness2;
 
 
+	// Oren-Nayar
+	//https://en.wikipedia.org/wiki/Oren%E2%80%93Nayar_reflectance_model
+	//Oren-Nayar BRDF is an improvement over the theoretical Lambertian model, applying distribution of purely diffuse microfacets.
+	half A = 1.0 - 0.5 * (roughnessSqr / (roughnessSqr + 0.33));
+    half B = 0.45 * (roughnessSqr / (roughnessSqr + 0.09));
+    half C = saturate(dot(normalize(vd - n * NdotV), normalize(ld - n * NdotL)));
+    half angleL = acos(NdotL);
+    half angleV = acos(NdotV);
+    half alpha  = max(angleL, angleV);
+    half beta   = min(angleL, angleV);
+    float3 diffuse = saturate(albedo.rgb * (A + B * C * sin(alpha) * tan(beta)) * gLightColor.rgb * NdotL);
 
 
-    // Geometric attenuation
-    //float a = roughness * roughness;
-    //float a2 = a * a;
-    //float G = 2.0 / (1.0 + sqrt(1.0 + a2 * (1.0 - NdotV * NdotV) / (NdotV * NdotV)));
+	// Cook-Torrance
+    half D = roughnessSqr / (gPi * pow(NdotHSqr * (roughnessSqr - 1.0) + 1.0, 2.0));
+    half k  = roughness2 * 0.5;
+	half gl = NdotL / (NdotL * (1.0 - k) + k);
+    half gv = NdotV / (NdotV * (1.0 - k) + k);
+    half G = gl * gv;
+    half F = metallic + (1.0 - metallic) * pow(1.0 - LdotH, 5.0);
+    float3 specular = saturate((D * G * F) / (4.0 * NdotV)) * gPi * gLightColor.rgb;
 
-    // Roughness (or microfacet distribution)
-    //float D = exp((NdotH * NdotH - 1.0) / (a2 * NdotH * NdotH)) / (gPi * a2 * NdotH * NdotH * NdotH * NdotH);
+	//Use the specularMap 
+	specular = saturate(specular * specularColor);
 
-   
 
-    // Specular
-    //float3 kS = F;
-    //float3 kD = (1.0 - kS) * (1.0 - metallic);
-    //float3 spec = (D * G * F) / (4.0 * NdotL * NdotV + 0.001); // prevent divide by zero
+	float3 color = (lerp(diffuse, specular, metallic));
 
-    // Add to diffuse the light
-	float k = metallic;
-    float3 diffColor = albedo * gLightColor * NdotL + gLightColor * specularColor / gPi * NdotL * (k + Rs * (1.0 - k));
-    //float3 specColor = spec;
+	color *= gLightIntensity;
+	color += gAmbientColor;
 
-    return saturate(diffColor * gLightIntensity);
+	return (color);
 }
 
 float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection, float3 specularColor)
@@ -270,16 +269,16 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection, fl
 	if(gUseCookTorrance)
 	{
 		// Get the roughness, metallic, and ao from their respective maps
-    	//float roughness = gRoughnessMap.Sample(gSampler, texCoord).r;		
-		//float metallic = 0.5;
 		float roughness = gGlossinessMap.Sample(gSampler, texCoord).r;
-		float metallic = 0.0;
 
+		
+		//Should be 0 or 1 in a map but i don't have a map. So i just set it to 0.85
+		float metallic = 0.85;
     	//float ao = gAOMap.Sample(gSampler, texCoord).r;
 
 		// Calculate the Cook-Torrance BRDF
 		float3 F0 = float3(0.04, 0.04, 0.04); // F0 for dielectrics
-		float3 bdrf = CalculateCookTorrance(normal, viewDirection, normalize(gLightDirection), roughness, metallic, diffColor, F0, specularColor);
+		float3 bdrf = CalculateCookTorrance(normal, viewDirection, -gLightDirection, roughness, metallic, diffColor, F0, specularColor);
 		bdrf *= normalize(gLightColor);
 		//bdrf *= ao;
 
@@ -289,7 +288,7 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection, fl
 	
 	//Calculate the strenght with the angle beween light and normal
 	//use saturate() to clamp that value between [0, 1]
-	float diffuseStrength = saturate(dot(normal, normalize(gLightDirection)));
+	float diffuseStrength = saturate(dot(normal, normalize(-gLightDirection)));
 	
 	//Calculate the half lambert
 	float3 lambert = pow(diffuseStrength * 0.5 + 0.5, 2.0);
@@ -300,8 +299,6 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection, fl
 	
 	return diffColor * gLightIntensity + gAmbientColor + specularColor;
 }
-
-
 
 
 
@@ -324,14 +321,6 @@ VertexShaderOutput VS(VertexShaderInput input)
 	return output;
 }
 
-void CalculateViewDirection(float3 worldPos, out float3 viewDirection)
-{
-	float3 invViewDirection = normalize(gCameraPosition - worldPos);
-	viewDirection = -invViewDirection;
-}
-
-
-
 //------------------------------------------------
 // Pixel Shader
 //------------------------------------------------
@@ -341,9 +330,8 @@ float4 PS(VertexShaderOutput pixelShaderInput) : SV_TARGET
 	pixelShaderInput.Normal = normalize(pixelShaderInput.Normal);
 	pixelShaderInput.Tangent = normalize(pixelShaderInput.Tangent);
 
-
-	float3 viewDirection;
-	CalculateViewDirection(pixelShaderInput.WorldPosition.xyz, viewDirection);
+	float3 viewDirectionMinus = normalize(pixelShaderInput.WorldPosition.xyz - gCameraPosition.xyz);
+	float3 viewDirection = -viewDirectionMinus;
 	
 	//NORMAL
 	float3 newNormal = CalculateNormal(pixelShaderInput.Tangent, pixelShaderInput.Normal, pixelShaderInput.TexCoord);
@@ -359,7 +347,8 @@ float4 PS(VertexShaderOutput pixelShaderInput) : SV_TARGET
 	
 	//add more contrast
 	finalColor = saturate(pow(abs(finalColor), gContrast));
-	return float4(finalColor, 1.f);
+
+	return float4(finalColor, 1.0);
 }
 
 

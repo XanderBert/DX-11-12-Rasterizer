@@ -3,23 +3,21 @@
 
 TextureEffect::TextureEffect(ID3D11Device* pDevice, const std::wstring& assetFile, const LPCSTR& techniqueName)
 : PosCol3DEffect(pDevice, assetFile, techniqueName)
+, m_TimeFloat(m_pEffect, "gTime", 0.f)
+, m_ContrastFloat(m_pEffect, "gContrast", 1.f)
+, m_ShininessFloat(m_pEffect, "gShininess", 25.f)
+, m_LightIntensityFloat(m_pEffect, "gLightIntensity", 7.f)
+, m_CameraPositionVector(m_pEffect, "gCameraPosition", dae::Vector3{0.f, 0.f, -50.f})
+, m_LightDirectionVector(m_pEffect, "gLightDirection", dae::Vector3{0.577f, -0.577f, 0.577f})
+, m_AmbientColorVector(m_pEffect, "gAmbientColor", dae::Vector3{0.03f, 0.03f, 0.03f})
+, m_LightColorVector(m_pEffect, "gLightColor", dae::Vector3{1.f, 1.f, 1.f})
 , m_UseSpecularBool(m_pEffect, "gUseSpecularPhong", true)
 , m_UseHalfLambertBool(m_pEffect, "gUseHalfLambert", false)
 , m_UseNormalMapBool(m_pEffect, "gUseTextureNormal", true)
-, m_LightDirectionVector(m_pEffect, "gLightDirection", dae::Vector3{0.577f,-0.577f,0.577f})
-, m_AmbientColorVector(m_pEffect, "gAmbientColor", dae::Vector3{0.03f,0.03f,0.03f})
-, m_LightColorVector(m_pEffect, "gLightColor", dae::Vector3{1.f,1.f,1.f})
 , m_FlipGreenChannelBool(m_pEffect, "gFlipGreenChannel", false)
-, m_RemapNormalRangeBool(m_pEffect, "gRemapNormal", false)
+, m_RemapNormalRangeBool(m_pEffect, "gRemapNormal", true)
 , m_UseCookTorranceBool(m_pEffect, "gUseCookTorrance", false)
-, m_CameraPositionVector(m_pEffect, "gCameraPosition", dae::Vector3{0.f,0.f,-50.f})
-, m_ShininessFloat(m_pEffect, "gShininess", 25.f)
-, m_LightIntensityFloat(m_pEffect, "gLightIntensity", 7.f)
-, m_ContrastFloat(m_pEffect, "gContrast", 1.f)
-, m_TimeFloat(m_pEffect, "gTime", 0.f)
 , m_UseCombustionModulation(m_pEffect, "gCombustionModulation", true)
-
-
 {
     //Diffuse map
     m_pDiffuseMapVariable = m_pEffect->GetVariableByName("gDiffuseMap")->AsShaderResource();
