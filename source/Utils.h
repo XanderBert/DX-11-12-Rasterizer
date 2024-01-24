@@ -1,5 +1,10 @@
 #pragma once
+#include <codecvt>
+
+#include "Macros.h"
 #include <fstream>
+#include <locale>
+
 #include "Math.h"
 #include "Mesh.h"
 
@@ -7,6 +12,43 @@ namespace dae
 {
 	namespace Utils
 	{
+		inline std::wstring GetErrorDescription(HRESULT hr)
+		{
+			wchar_t* descriptionWinalloc = nullptr;
+			const auto result = FormatMessageW(
+				FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+				nullptr, hr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+				reinterpret_cast<LPWSTR>(&descriptionWinalloc), 0, nullptr
+			);
+
+			std::wstring description;
+			if (!result)
+			{
+				LogError("Failed formatting windows error")
+			}
+			else
+			{
+				description = descriptionWinalloc;
+
+				
+				if (LocalFree(descriptionWinalloc))
+				{
+					LogError("Failed freeing memory for windows error formatting")
+				}
+				if (description.ends_with(L"\r\n"))
+				{
+					description.resize(description.size() - 2);
+				}
+			}
+			return description;
+		}
+
+
+
+
+
+
+		
 		//Just parses vertices and indices
 #pragma warning(push)
 #pragma warning(disable : 4505) //Warning unreferenced local function

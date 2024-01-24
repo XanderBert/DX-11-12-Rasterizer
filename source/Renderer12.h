@@ -35,5 +35,11 @@ namespace dae
         Microsoft::WRL::ComPtr<ID3D12Fence> m_pFence;
         UINT64 m_FenceValue{};
         HANDLE m_FenceEvent{};
+
+
+
+        //Testing
+        float m_TimeKey{};
+        const float m_TimeKeyIncrement{ 0.01f };
     };
 }

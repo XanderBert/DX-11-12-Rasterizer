@@ -10,8 +10,8 @@ Basic Rasterizer that uses DirectX11 and DirectX12.
 * Option for Half Lambert
 * A debug menu in ImGui to change shader parameters on the flight.
 * Added a waving contrast for the FireFX and making it less predictable by using waves in waves.
-* In DirectX 11 Setup
-  * Using an updated factory
+* In DirectX 11 Setup# * Using an updated factory
+
   * Using DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL backbuffer.
   * Added a system for reading/writing  for some effect variables.
     * Bool

@@ -1,6 +1,10 @@
 ﻿#include "pch.h"
 #include "Renderer12.h"
-#include <stdint.h>
+
+#include <cmath>
+#include <numbers>
+
+#include "Utils.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -37,14 +41,14 @@ void dae::Renderer12::Render()
     HRESULT hr = S_OK;
     
     hr  = m_pCommandAllocator->Reset();
-    ReturnAndAssertOnFail(hr)
+    AssertOnFail(hr)
     
     
     hr = m_pCommandList->Reset(m_pCommandAllocator.Get(), nullptr);
-    ReturnAndAssertOnFail(hr)
+    AssertOnFail(hr)
 
     const UINT currentBackBufferIndex = m_pSwapChain->GetCurrentBackBufferIndex();
-    auto& currentBackBuffer = pRenderTargetBackBuffers[currentBackBufferIndex];
+    const auto& currentBackBuffer = pRenderTargetBackBuffers[currentBackBufferIndex];
     
     //Clear the render target
     //transition the render target from the present state to the render target state so the command list draws to it starting from here
@@ -58,8 +62,14 @@ void dae::Renderer12::Render()
         m_pCommandList->ResourceBarrier(1, &barrier);
 
         //Clear the buffer
-        constexpr ColorRGB clearColor = ColorRGB{ 0.39f, 0.59f, 0.93f };
-        constexpr float clearColorF[4] = { clearColor.r, clearColor.g, clearColor.b, 1.f };
+        //constexpr ColorRGB clearColor = ColorRGB{ 0.39f, 0.59f, 0.93f };
+        const ColorRGB clearColor = ColorRGB
+        {
+            sin(2.f * m_TimeKey + 1.f) * 0.5f + 0.5f,
+            sin(3.f * m_TimeKey + 2.f) * 0.5f + 0.5f,
+            sin(4.f * m_TimeKey + 3.f) * 0.5f + 0.5f
+        };
+        const float clearColorF[4] = { clearColor.r, clearColor.g, clearColor.b, 1.f };
 
         const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle
         {
@@ -90,7 +100,7 @@ void dae::Renderer12::Render()
     //transition the render target from the render target state to the present state so the swap chain can present it
     {
         hr =  m_pCommandList->Close();
-        ReturnAndAssertOnFail(hr)
+        AssertOnFail(hr)
 
         ID3D12CommandList* ppCommandLists[] = { m_pCommandList.Get() };
         m_pCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
@@ -100,23 +110,30 @@ void dae::Renderer12::Render()
     //insert a fence to mark the command list completion
     {
         hr = m_pCommandQueue->Signal(m_pFence.Get(), m_FenceValue);
-        ReturnAndAssertOnFail(hr)
+        AssertOnFail(hr)
         ++m_FenceValue;
     }
 
     //Present the swapchain
-    m_pSwapChain->Present(0, 0);
+    m_pSwapChain->Present(1, 0);
 
 
 
     //wait for the command list to become free
     //TODO: this is not ideal, right now we wait for the frame to be completed before continuing
     hr  = m_pFence->SetEventOnCompletion(m_FenceValue - 1, m_FenceEvent);
-    ReturnAndAssertOnFail(hr)
+    AssertOnFail(hr)
     if(WaitForSingleObject(m_FenceEvent, INFINITE) == WAIT_FAILED)
     {
         assert(false && "WaitForSingleObject failed!");
     }
+
+
+    if((m_TimeKey += m_TimeKeyIncrement) >= 2.f * std::numbers::pi_v<float>)
+    {
+        m_TimeKey = 0.f;
+    }
+
 }
 
 void dae::Renderer12::IncrementFilter() const
@@ -126,6 +143,17 @@ void dae::Renderer12::IncrementFilter() const
 HRESULT dae::Renderer12::InitializeDirectX()
 {
     HRESULT hr = S_OK;
+
+    //Enable DX12 Debug Layer if needed
+#ifdef _DEBUG
+    {
+        ComPtr<ID3D12Debug> pDebugController;
+        hr = D3D12GetDebugInterface(IID_PPV_ARGS(&pDebugController));
+        ReturnOnFail(hr)
+        pDebugController->EnableDebugLayer();
+    }
+#endif
+
     
     //Create a factory
     ComPtr<IDXGIFactory4> pFactory;
@@ -140,7 +168,7 @@ HRESULT dae::Renderer12::InitializeDirectX()
     //Command queue
     //The CPU sends commands on a command list, The GPU then executes these commands
     {
-        const D3D12_COMMAND_QUEUE_DESC desc =
+        constexpr D3D12_COMMAND_QUEUE_DESC desc =
         {
             //A Direct Que can be used for any operation
             //A Compute Que can be used for compute and copy operations
@@ -200,7 +228,7 @@ HRESULT dae::Renderer12::InitializeDirectX()
 
     //Create Descriptor Heap for RenderTargetViews
     {
-        const D3D12_DESCRIPTOR_HEAP_DESC desc =
+        constexpr D3D12_DESCRIPTOR_HEAP_DESC desc =
         {
             .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
             .NumDescriptors = m_BufferCount,

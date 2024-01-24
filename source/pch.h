@@ -1,5 +1,6 @@
 #pragma once
-#define USE_DIRECTX12 0
+#define WIN32_LEAN_AND_MEAN
+#define USE_DIRECTX12 1
 
 //i currently dont have ImGui working with DirectX12
 #if USE_DIRECTX12

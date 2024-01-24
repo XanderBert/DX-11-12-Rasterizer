@@ -222,7 +222,7 @@ float3 CalculateCookTorrance(float3 normal, float3 viewDir, float3 lightDir, flo
 	float NdotHSqr = NdotH * NdotH;
 
 	// Roughness
-    float roughness2   = -roughness;
+    float roughness2   = roughness * roughness;
     float roughnessSqr = roughness2 * roughness2;
 
 
@@ -277,7 +277,7 @@ float3 CalculateDiffuse(float3 normal, float2 texCoord, float3 viewDirection, fl
     	//float ao = gAOMap.Sample(gSampler, texCoord).r;
 
 		// Calculate the Cook-Torrance BRDF
-		float3 F0 = float3(0.04, 0.04, 0.04); // F0 for dielectrics
+		float3 F0 = float3(0.98, 0.82, 0.76); // F0 for dielectrics
 		float3 bdrf = CalculateCookTorrance(normal, viewDirection, -gLightDirection, roughness, metallic, diffColor, F0, specularColor);
 		bdrf *= normalize(gLightColor);
 		//bdrf *= ao;
