@@ -4,7 +4,6 @@
 #include "Macros.h"
 #include <fstream>
 #include <locale>
-
 #include "Math.h"
 #include "Mesh.h"
 

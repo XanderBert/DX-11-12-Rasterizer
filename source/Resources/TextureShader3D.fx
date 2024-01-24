@@ -369,7 +369,7 @@ float4 PSFlat(VertexShaderOutput pixelShaderInput) : SV_TARGET
 		float wave1 = (sin(gTime * 8.f)) * 2.0f;
 		float wave2 = (sin(gTime * 4.f + wave1)) / 1.5f;
 		float wave3 = (sin(gTime * 8.f + wave2)) / 1.2f;
-
+		
 		contrast += wave3;
 	}
 

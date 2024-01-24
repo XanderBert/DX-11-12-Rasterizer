@@ -22,6 +22,23 @@ dae::Renderer12::Renderer12(SDL_Window* pWindow) :IRenderer(pWindow)
     }
 }
 
+dae::Renderer12::~Renderer12()
+{
+    //Wait for the command-queue to be empty
+    HRESULT hr = S_OK;
+    hr = m_pCommandQueue->Signal(m_pFence.Get(), m_FenceValue);
+    AssertOnFail(hr)
+
+    hr = m_pFence->SetEventOnCompletion(m_FenceValue, m_FenceEvent);
+    AssertOnFail(hr)
+
+    if(WaitForSingleObject(m_FenceEvent, 2000) == WAIT_FAILED)
+    {
+        hr = HRESULT_FROM_WIN32(GetLastError());
+        AssertOnFail(hr)
+    }
+}
+
 void dae::Renderer12::Update(const Timer* /*pTimer*/)
 {
 }
@@ -49,6 +66,13 @@ void dae::Renderer12::Render()
 
     const UINT currentBackBufferIndex = m_pSwapChain->GetCurrentBackBufferIndex();
     const auto& currentBackBuffer = pRenderTargetBackBuffers[currentBackBufferIndex];
+
+    const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle
+    {
+    m_pDescriptorHeapRTV->GetCPUDescriptorHandleForHeapStart(),static_cast<INT>(currentBackBufferIndex),
+        m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV)
+    };
+
     
     //Clear the render target
     //transition the render target from the present state to the render target state so the command list draws to it starting from here
@@ -70,18 +94,31 @@ void dae::Renderer12::Render()
             sin(4.f * m_TimeKey + 3.f) * 0.5f + 0.5f
         };
         const float clearColorF[4] = { clearColor.r, clearColor.g, clearColor.b, 1.f };
-
-        const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle
-        {
-            m_pDescriptorHeapRTV->GetCPUDescriptorHandleForHeapStart(),
-            static_cast<INT>(currentBackBufferIndex),
-            m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV)
-        };
-
         m_pCommandList->ClearRenderTargetView(rtvHandle, clearColorF, 0, nullptr);
     }
 
 
+    //Set the pipleline state
+    {
+        m_pCommandList->SetPipelineState(m_pPipelineState.Get());
+        m_pCommandList->SetGraphicsRootSignature(m_pRootSignature.Get());
+
+        //Set IA stage
+        m_pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        m_pCommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
+
+        //Set RS
+        m_pCommandList->RSSetViewports(1, &m_Viewport);
+        m_pCommandList->RSSetScissorRects(1, &m_ScissorRect);
+
+        //bind RenderTarget
+        m_pCommandList->OMSetRenderTargets(1, &rtvHandle, TRUE, nullptr);
+
+        //Draw the triangle
+        m_pCommandList->DrawInstanced(m_NrVertices, 1, 0, 0);
+    }
+
+    
     //Transition from render target state to present state
     {
         const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition
@@ -109,9 +146,8 @@ void dae::Renderer12::Render()
 
     //insert a fence to mark the command list completion
     {
-        hr = m_pCommandQueue->Signal(m_pFence.Get(), m_FenceValue);
+        hr = m_pCommandQueue->Signal(m_pFence.Get(), ++m_FenceValue);
         AssertOnFail(hr)
-        ++m_FenceValue;
     }
 
     //Present the swapchain
@@ -121,7 +157,7 @@ void dae::Renderer12::Render()
 
     //wait for the command list to become free
     //TODO: this is not ideal, right now we wait for the frame to be completed before continuing
-    hr  = m_pFence->SetEventOnCompletion(m_FenceValue - 1, m_FenceEvent);
+    hr  = m_pFence->SetEventOnCompletion(m_FenceValue, m_FenceEvent);
     AssertOnFail(hr)
     if(WaitForSingleObject(m_FenceEvent, INFINITE) == WAIT_FAILED)
     {
@@ -151,6 +187,11 @@ HRESULT dae::Renderer12::InitializeDirectX()
         hr = D3D12GetDebugInterface(IID_PPV_ARGS(&pDebugController));
         ReturnOnFail(hr)
         pDebugController->EnableDebugLayer();
+
+        // ComPtr<ID3D12Debug1> pDebugController1;
+        // hr = pDebugController->QueryInterface(IID_PPV_ARGS(&pDebugController1));
+        // ReturnOnFail(hr)
+        // pDebugController1->SetEnableGPUBasedValidation(true);
     }
 #endif
 
@@ -293,5 +334,188 @@ HRESULT dae::Renderer12::InitializeDirectX()
         ReturnOnFail(hr)
     }
 
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+    //Create Vertex Buffer
+    {
+        constexpr Vertex12 vertexData[] =
+        {
+          {{0.0f, 0.5f, 0.0f }, {1.0f, 0.0f, 0.0f, 1.0f}}, //Top
+            {{0.43f, -0.25f, 0.0f},{0.0f, 0.0f, 1.0f, 1.0f} }, //Right
+            {{-0.43f, -0.25f, 0.0f},{0.0f, 1.0f, 0.0f, 1.0f} } //Left
+        };
+
+        m_NrVertices = _countof(vertexData);
+
+        //Create the resource for the VertexBuffer
+        {
+            const CD3DX12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+            const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertexData));
+            hr = m_pDevice->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &resourceDesc,
+                D3D12_RESOURCE_STATE_COPY_DEST,
+                nullptr,
+                IID_PPV_ARGS(&m_pVertexBuffer)
+            );
+            ReturnOnFail(hr);
+        }
+
+        //Create a resource for the cpu to upload our vertex data to, So that our Gpu can read it and put in in the vertex buffer(which is not accible by the cpu)
+        ComPtr<ID3D12Resource> pVertexUploadBuffer;
+        {
+            const CD3DX12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+            const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertexData));
+            hr = m_pDevice->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &resourceDesc,
+                D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr,
+                IID_PPV_ARGS(&pVertexUploadBuffer)
+            );
+            ReturnOnFail(hr);
+        }
+
+        //Copy or Vertex data into the upload Buffer
+        {
+            Vertex12* mappedVertexData = nullptr;
+            hr = pVertexUploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mappedVertexData));
+            ReturnOnFail(hr);
+            //Copy the data
+            std::ranges::copy(vertexData, mappedVertexData);
+            pVertexUploadBuffer->Unmap(0, nullptr);
+        }
+
+
+        //Reset Command List and Allocator
+        hr = m_pCommandAllocator->Reset();
+        ReturnOnFail(hr)
+        hr = m_pCommandList->Reset(m_pCommandAllocator.Get(), nullptr);
+        ReturnOnFail(hr)
+
+        //Copy Upload buffer into vertex buffer
+        m_pCommandList->CopyResource(m_pVertexBuffer.Get(), pVertexUploadBuffer.Get());
+        hr = m_pCommandList->Close();
+        ReturnOnFail(hr)
+
+        ID3D12CommandList* const commandLists[] = { m_pCommandList.Get() };
+        m_pCommandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+        //Wait for the GPU to be done with the copy before we destroy the upload buffer
+        hr = m_pCommandQueue->Signal(m_pFence.Get(), ++m_FenceValue);
+        ReturnOnFail(hr)
+
+        hr = m_pFence->SetEventOnCompletion(m_FenceValue, m_FenceEvent);
+        ReturnOnFail(hr)
+        if(WaitForSingleObject(m_FenceEvent, INFINITE) == WAIT_FAILED)
+        {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            ReturnOnFail(hr)
+        }
+    }
+
+    //Create a vertex buffer view
+    m_VertexBufferView =
+    {
+        .BufferLocation = m_pVertexBuffer->GetGPUVirtualAddress(),
+        .SizeInBytes = m_NrVertices * static_cast<UINT>(sizeof(Vertex12)),
+        .StrideInBytes = sizeof(Vertex12),
+    };
+
+
+    //Create our root signature
+    //ComPtr<ID3D12RootSignature> pRootSignatureDescription;
+    {
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDescription;
+        rootSignatureDescription.Init(
+            0,
+            nullptr,
+            0,
+            nullptr,
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+        );
+        
+        //Serialize the root signature
+        ComPtr<ID3DBlob> pSerializedRootSignatureBlob;
+        ComPtr<ID3DBlob> pErrorBlob;
+
+
+        if(hr = D3D12SerializeRootSignature(&rootSignatureDescription, D3D_ROOT_SIGNATURE_VERSION_1, &pSerializedRootSignatureBlob, &pErrorBlob); FAILED(hr))
+        {
+            if(pErrorBlob)
+            {
+                auto pErrorBuffer = static_cast<const char*>(pErrorBlob->GetBufferPointer());
+                LogError("Failed to serialize root signature: " + std::string(pErrorBuffer));
+            }
+            ReturnOnFail(hr)
+        }
+
+
+        //Create the root signature
+        hr = m_pDevice->CreateRootSignature(0, pSerializedRootSignatureBlob->GetBufferPointer(), pSerializedRootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&m_pRootSignature));
+        ReturnOnFail(hr)
+    }
+
+    // Create the pipeline state, which includes compiling and loading shaders.
+    {
+        struct PipeLineStateStream
+        {
+            CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE pRootSignature;
+            CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
+            CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
+            CD3DX12_PIPELINE_STATE_STREAM_VS VertexShader;
+            CD3DX12_PIPELINE_STATE_STREAM_PS PixelShader;
+            CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
+        } pipelineStateStream;
+        
+        // Define the vertex input layout.
+        D3D12_INPUT_ELEMENT_DESC inputElementDescriptions[] =
+        {
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex12, Position), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(Vertex12, Color), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+        };
+
+        // Load shaders
+        ComPtr<ID3DBlob> pVertexShader;
+        hr = D3DReadFileToBlob(L"../bin/Debug/VertexShader.cso", &pVertexShader);
+        ReturnOnFail(hr)
+        
+        ComPtr<ID3DBlob> pPixelShader;
+        hr = D3DReadFileToBlob(L"../bin/Debug/PixelShader.cso", &pPixelShader);
+        ReturnOnFail(hr)
+
+        //Fill the pipeline state stream (PSO)
+        pipelineStateStream.pRootSignature = m_pRootSignature.Get();
+        pipelineStateStream.InputLayout = { inputElementDescriptions, _countof(inputElementDescriptions) };
+        pipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        pipelineStateStream.VertexShader = CD3DX12_SHADER_BYTECODE(pVertexShader.Get());
+        pipelineStateStream.PixelShader = CD3DX12_SHADER_BYTECODE(pPixelShader.Get());
+
+        D3D12_RT_FORMAT_ARRAY rtvFormats{};
+        rtvFormats.NumRenderTargets = 1;
+        rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        
+        pipelineStateStream.RTVFormats = rtvFormats;
+
+        //Build the actual pipeline state object (PSO)
+        const D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc =
+        {
+            .SizeInBytes = sizeof(PipeLineStateStream),
+            .pPipelineStateSubobjectStream = &pipelineStateStream
+        };
+        
+        hr = m_pDevice->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&m_pPipelineState));
+        ReturnOnFail(hr)
+
+        //define scissors and viewport
+        m_ScissorRect = CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX);
+        m_Viewport = CD3DX12_VIEWPORT(0.f, 0.f, static_cast<float>(m_Width), static_cast<float>(m_Height));
+    }
     return hr;
 }

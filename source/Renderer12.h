@@ -1,9 +1,16 @@
 ﻿#pragma once
 #include "IRenderer.h"
-
+#include "DirectXMath.h"
 struct SDL_Window;
 struct SDL_Surface;
 class Camera;
+
+struct Vertex12
+{
+    DirectX::XMFLOAT3 Position;
+    DirectX::XMFLOAT4 Color;
+};
+
 
 namespace dae
 {
@@ -11,7 +18,7 @@ namespace dae
     {
     public:
         Renderer12(SDL_Window* pWindow);
-        virtual ~Renderer12() override = default;
+        virtual ~Renderer12() override;
         
         virtual void Update(const Timer* pTimer) override;
         virtual void OnImGuiRender() override;
@@ -41,5 +48,15 @@ namespace dae
         //Testing
         float m_TimeKey{};
         const float m_TimeKeyIncrement{ 0.01f };
+
+        //For Mesh / Effect classes
+        UINT m_NrVertices{};
+        Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pPipelineState;
+        Microsoft::WRL::ComPtr<ID3D12RootSignature> m_pRootSignature;
+
+        Microsoft::WRL::ComPtr<ID3D12Resource> m_pVertexBuffer;
+        D3D12_VERTEX_BUFFER_VIEW m_VertexBufferView{};
+        CD3DX12_RECT m_ScissorRect{};
+        CD3DX12_VIEWPORT m_Viewport{};
     };
 }

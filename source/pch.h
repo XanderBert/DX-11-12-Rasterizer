@@ -1,15 +1,11 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
-#define USE_DIRECTX12 1
+#define USE_DIRECTX12 0
 
-//i currently dont have ImGui working with DirectX12
+//i currently don't have ImGui working with DirectX12
 #if USE_DIRECTX12
     #define IMGUI_DISABLE
 #endif
-
-
-//#define IMGUI_DISABLE  
-
 
 
 #include <iostream>
@@ -58,7 +54,7 @@
 #include "backends/imgui_impl_sdl2.h"
 #include "backends/imgui_impl_dx11.h"
 
-//Texures
-typedef ID3D11Texture2D Texture2D;
 
+
+typedef ID3D11Texture2D Texture2D;
 

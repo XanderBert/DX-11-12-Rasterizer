@@ -49,6 +49,19 @@
     <ClInclude Include="IEffect.h">
       <Filter>Shaders</Filter>
     </ClInclude>
+    <ClInclude Include="DX11EffectVariables.h" />
+    <ClInclude Include="imgui-1.90.1\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="imgui-1.90.1\backends\imgui_impl_sdl2.h" />
+    <ClInclude Include="imgui-1.90.1\imconfig.h" />
+    <ClInclude Include="imgui-1.90.1\imgui.h" />
+    <ClInclude Include="imgui-1.90.1\imgui_internal.h" />
+    <ClInclude Include="imgui-1.90.1\imstb_rectpack.h" />
+    <ClInclude Include="imgui-1.90.1\imstb_textedit.h" />
+    <ClInclude Include="imgui-1.90.1\imstb_truetype.h" />
+    <ClInclude Include="IRenderer.h" />
+    <ClInclude Include="Macros.h" />
+    <ClInclude Include="Renderer12.h" />
+    <ClInclude Include="TextureEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -78,5 +91,39 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="DX11EffectVariables.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui-1.90.1\backends\imgui_impl_dx11.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui-1.90.1\backends\imgui_impl_sdl2.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui-1.90.1\imgui.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui-1.90.1\imgui_demo.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui-1.90.1\imgui_draw.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui-1.90.1\imgui_tables.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui-1.90.1\imgui_widgets.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer12.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureEffect.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Resources\VertexShader.hlsl" />
+    <FxCompile Include="Resources\PixelShader.hlsl" />
   </ItemGroup>
 </Project>

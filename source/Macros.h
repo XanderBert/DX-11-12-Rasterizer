@@ -36,6 +36,7 @@ pObject = nullptr;\
 #define ReturnOnFail(hr) if(FAILED(hr))\
 {\
     LogWError(Utils::GetErrorDescription(hr));\
+    assert(SUCCEEDED(hr) && "HRESULT failed!");\
     return hr;\
 } \
 
