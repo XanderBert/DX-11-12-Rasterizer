@@ -54,7 +54,7 @@ namespace dae {
 
 	void Renderer::Update(const Timer* pTimer)
 	{
-		m_pCamera->Update(pTimer);
+		IRenderer::Update(pTimer);
 		m_pMesh->Update(pTimer,m_pCamera->GetViewProjectionMatrix(), m_pCamera->GetPosition());
 	}
 

@@ -39,8 +39,9 @@ dae::Renderer12::~Renderer12()
     }
 }
 
-void dae::Renderer12::Update(const Timer* /*pTimer*/)
+void dae::Renderer12::Update(const Timer* pTimer)
 {
+    IRenderer::Update(pTimer);
 }
 
 void dae::Renderer12::OnImGuiRender()
@@ -114,7 +115,14 @@ void dae::Renderer12::Render()
         //bind RenderTarget
         m_pCommandList->OMSetRenderTargets(1, &rtvHandle, TRUE, nullptr);
 
-        //Draw the triangle
+
+
+        const auto worldMatrix =  DirectX::XMMatrixMultiply(m_pCamera->GetViewProjectionMatrixXM(), DirectX::XMMatrixTranspose(DirectX::XMMatrixRotationZ(m_TimeKey)));
+        //const auto worldMatrix = (m_pCamera->GetViewProjectionMatrixXM());
+        m_pCommandList->SetGraphicsRoot32BitConstants(0, sizeof(DirectX::XMMATRIX) / 4, &worldMatrix, 0);
+
+
+    	//Draw the triangle
         m_pCommandList->DrawInstanced(m_NrVertices, 1, 0, 0);
     }
 
@@ -342,11 +350,11 @@ HRESULT dae::Renderer12::InitializeDirectX()
 
     //Create Vertex Buffer
     {
-        constexpr Vertex12 vertexData[] =
+        const Vertex vertexData[] =
         {
-          {{0.0f, 0.5f, 0.0f }, {1.0f, 0.0f, 0.0f, 1.0f}}, //Top
-            {{0.43f, -0.25f, 0.0f},{0.0f, 0.0f, 1.0f, 1.0f} }, //Right
-            {{-0.43f, -0.25f, 0.0f},{0.0f, 1.0f, 0.0f, 1.0f} } //Left
+          {{0.0f, 0.5f, 0.0f }, {1.0f, 0.0f, 0.0f}}, //Top
+            {{0.43f, -0.25f, 0.0f},{0.0f, 0.0f, 1.0f} }, //Right
+            {{-0.43f, -0.25f, 0.0f},{0.0f, 1.0f, 0.0f} } //Left
         };
 
         m_NrVertices = _countof(vertexData);
@@ -384,7 +392,7 @@ HRESULT dae::Renderer12::InitializeDirectX()
 
         //Copy or Vertex data into the upload Buffer
         {
-            Vertex12* mappedVertexData = nullptr;
+            Vertex* mappedVertexData = nullptr;
             hr = pVertexUploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mappedVertexData));
             ReturnOnFail(hr);
             //Copy the data
@@ -424,18 +432,22 @@ HRESULT dae::Renderer12::InitializeDirectX()
     m_VertexBufferView =
     {
         .BufferLocation = m_pVertexBuffer->GetGPUVirtualAddress(),
-        .SizeInBytes = m_NrVertices * static_cast<UINT>(sizeof(Vertex12)),
-        .StrideInBytes = sizeof(Vertex12),
+        .SizeInBytes = m_NrVertices * static_cast<UINT>(sizeof(Vertex)),
+        .StrideInBytes = sizeof(Vertex),
     };
 
 
     //Create our root signature
-    //ComPtr<ID3D12RootSignature> pRootSignatureDescription;
     {
+        //Create root signature parameters
+        CD3DX12_ROOT_PARAMETER rootParameters[1]{};
+        rootParameters[0].InitAsConstants(sizeof(DirectX::XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+
+
         CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDescription;
         rootSignatureDescription.Init(
-            0,
-            nullptr,
+            (UINT)std::size(rootParameters),
+			rootParameters,
             0,
             nullptr,
             D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
@@ -477,8 +489,10 @@ HRESULT dae::Renderer12::InitializeDirectX()
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescriptions[] =
         {
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex12, Position), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(Vertex12, Color), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, position), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, normal), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, tangent), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(Vertex, uv), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
 
         // Load shaders

@@ -1,15 +1,10 @@
 ﻿#pragma once
 #include <map>
+
+#include "IRenderer.h"
 #include "Matrix.h"
 #include "TextureEffect.h"
 
-struct Vertex
-{
-    dae::Vector3 position;
-    dae::Vector3 normal;
-    dae::Vector3 tangent;
-    dae::Vector2 uv;
-};
 
 class Texture;
 class Effect;

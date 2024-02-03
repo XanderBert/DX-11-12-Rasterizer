@@ -3,6 +3,15 @@ struct SDL_Window;
 struct SDL_Surface;
 class Camera;
 
+struct Vertex
+{
+    dae::Vector3 position;
+    dae::Vector3 normal;
+    dae::Vector3 tangent;
+    dae::Vector2 uv;
+};
+
+
 namespace dae
 {
     //A render interface
@@ -23,8 +32,13 @@ namespace dae
         IRenderer& operator=(const IRenderer&) = delete;
         IRenderer& operator=(IRenderer&&) noexcept = delete;
 
-        virtual void IncrementFilter() const = 0;    
-        virtual void Update(const Timer* pTimer) = 0;
+        virtual void IncrementFilter() const = 0;
+
+        virtual void Update(const Timer* pTimer)
+        {
+            m_pCamera->Update(pTimer);
+        }
+
         virtual void OnImGuiRender() = 0;
         virtual void Render() = 0;
         

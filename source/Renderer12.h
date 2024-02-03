@@ -5,11 +5,6 @@ struct SDL_Window;
 struct SDL_Surface;
 class Camera;
 
-struct Vertex12
-{
-    DirectX::XMFLOAT3 Position;
-    DirectX::XMFLOAT4 Color;
-};
 
 
 namespace dae

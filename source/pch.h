@@ -1,6 +1,6 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
-#define USE_DIRECTX12 0
+#define USE_DIRECTX12 1
 
 //i currently don't have ImGui working with DirectX12
 #if USE_DIRECTX12
@@ -57,4 +57,3 @@
 
 
 typedef ID3D11Texture2D Texture2D;
-

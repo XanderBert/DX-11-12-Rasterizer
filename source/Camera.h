@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <DirectXMath.h>
+
 namespace dae
 {
     class Camera final
@@ -30,6 +32,7 @@ namespace dae
         
         Matrix GetViewMatrix();
         Matrix GetProjectionMatrix() const;
+        DirectX::XMMATRIX GetViewProjectionMatrixXM();
         Matrix GetViewInverseMatrix() { return Matrix::Inverse(GetViewMatrix()); }
        Matrix GetViewProjectionMatrix() { return GetViewMatrix() * GetProjectionMatrix(); }
         

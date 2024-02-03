@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "Camera.h"
 
+#include <DirectXMath.h>
+
 #include "imgui_internal.h"
 
 namespace dae
@@ -25,6 +27,7 @@ namespace dae
 		Vector3 direction{};
 
 		// Calculate new position with keyboard inputs
+        std::cout << pKeyboardState[SDL_SCANCODE_W] << std::endl;
 		direction += (pKeyboardState[SDL_SCANCODE_W] || pKeyboardState[SDL_SCANCODE_Z]) * m_Forward * keyboardMovementSpeed * deltaTime;
 		direction -= pKeyboardState[SDL_SCANCODE_S] * m_Forward * keyboardMovementSpeed * deltaTime;
 		direction -= (pKeyboardState[SDL_SCANCODE_Q] || pKeyboardState[SDL_SCANCODE_A]) * m_Right * keyboardMovementSpeed * deltaTime;
@@ -79,5 +82,21 @@ namespace dae
     Matrix Camera::GetProjectionMatrix() const
     {
         return Matrix::CreatePerspectiveFovLH(m_Fov, m_AspectRatio, m_NearPlane, m_FarPlane);
+    }
+
+    //TODO Replace the Matrix Class with the directX one
+    DirectX::XMMATRIX Camera::GetViewProjectionMatrixXM()
+    {
+        Matrix viewProj = GetViewProjectionMatrix();
+
+        DirectX::XMMATRIX viewProjXM{};
+        viewProjXM.r[0] = DirectX::XMVectorSet(viewProj[0][0], viewProj[1][0], viewProj[2][0], viewProj[3][0]);
+        viewProjXM.r[1] = DirectX::XMVectorSet(viewProj[0][1], viewProj[1][1], viewProj[2][1], viewProj[3][1]);
+        viewProjXM.r[2] = DirectX::XMVectorSet(viewProj[0][2], viewProj[1][2], viewProj[2][2], viewProj[3][2]);
+        viewProjXM.r[3] = DirectX::XMVectorSet(viewProj[0][3], viewProj[1][3], viewProj[2][3], viewProj[3][3]);
+
+
+        return viewProjXM;
+
     }
 }
