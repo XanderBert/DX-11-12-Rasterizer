@@ -45,13 +45,36 @@ namespace dae
         const float m_TimeKeyIncrement{ 0.01f };
 
         //For Mesh / Effect classes
+        
+        std::vector<Vertex> m_Vertices;
         UINT m_NrVertices{};
+
+    	std::vector<UINT> m_Indices;
+        UINT m_NrIndices{};
+
+
         Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pPipelineState;
         Microsoft::WRL::ComPtr<ID3D12RootSignature> m_pRootSignature;
 
         Microsoft::WRL::ComPtr<ID3D12Resource> m_pVertexBuffer;
         D3D12_VERTEX_BUFFER_VIEW m_VertexBufferView{};
+
+    	Microsoft::WRL::ComPtr<ID3D12Resource> m_pIndexBuffer;
+        D3D12_INDEX_BUFFER_VIEW m_IndexBufferView{};
+
         CD3DX12_RECT m_ScissorRect{};
         CD3DX12_VIEWPORT m_Viewport{};
+
+        Microsoft::WRL::ComPtr<ID3D12Resource> m_pDepthBuffer;
+        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_pDepthStencilViewHeap;
+
+        //Microsoft::WRL::ComPtr<D3D12_CPU_DESCRIPTOR_HANDLE> m_pDepthStencilViewHandle;
+
+        //For Mesh class
+        void CreateVertexBuffer();
+        void CreateIndexBuffer();
+        void CreateRootSignature();
+        void CreatePipelineState();
+        void CreateDepthBuffer();
     };
 }

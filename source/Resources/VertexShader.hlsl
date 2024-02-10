@@ -20,11 +20,8 @@ VertexOutput main(float3 pos : POSITION, float3 normal : NORMAL, float3 tangent 
 {
     VertexOutput output;
 
-    output.Color = float4(normal, 1.0f);
-    const float4 posPoint = float4(pos.xyz, 1.0f);
-
-
-    output.position = mul(RotationMatrixBuffer.transform, posPoint);
+    output.Color = float4(uv, 1.f, 1.0f);
+    output.position = mul(float4(pos.xyz,1), RotationMatrixBuffer.transform);
 
     return output;
 }
